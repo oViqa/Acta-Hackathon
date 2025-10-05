@@ -1,19 +1,16 @@
 import express from 'express';
 import { z } from 'zod';
-import { Event, EventStatus } from '../models/Event';
-import { Attendance, AttendanceStatus } from '../models/Attendance';
+import { getDb } from '../config/database';
+import { isInGermany } from '../utils/geo';
+import { ObjectId } from 'mongodb';
 import { authenticate, AuthRequest } from '../middleware/auth';
-import { calculateDistance, isInGermany } from '../utils/geo';
 
 const router = express.Router();
 
 const createEventSchema = z.object({
   title: z.string().min(3).max(100),
   description: z.string().max(500).optional(),
-  location: z.object({
-    lat: z.number(),
-    lng: z.number()
-  }),
+  location: z.object({ lat: z.number(), lng: z.number() }),
   city: z.string(),
   state: z.string(),
   address: z.string().optional(),
@@ -22,153 +19,111 @@ const createEventSchema = z.object({
   attendeeLimit: z.number().min(5).max(100)
 });
 
+// GET /api/events?lat=&lng=&radius=&status=&limit=
 router.get('/', async (req, res, next) => {
   try {
-    const {
-      lat,
-      lng,
-      radius = '100000',
-      status = 'UPCOMING',
-      limit = '50'
-    } = req.query;
+    const { lat, lng, radius = '100000', status = 'UPCOMING', limit = '50' } = req.query as any;
 
-    const query: any = {
-      status: status as EventStatus
-    };
+    const db = getDb();
+    const eventsCol = db.collection('events');
+    const attendancesCol = db.collection('attendances');
 
-    // If location provided, filter by radius
+    const query: any = { status };
+
     if (lat && lng) {
-      const userLat = parseFloat(lat as string);
-      const userLng = parseFloat(lng as string);
-      const maxRadius = parseInt(radius as string);
+      const userLat = parseFloat(lat);
+      const userLng = parseFloat(lng);
+      const maxRadius = parseInt(radius, 10);
 
       query.location = {
         $near: {
-          $geometry: {
-            type: 'Point',
-            coordinates: [userLng, userLat]
-          },
-          $maxDistance: maxRadius
-        }
+          $geometry: { type: 'Point', coordinates: [userLng, userLat] },
+          $maxDistance: maxRadius,
+        },
       };
     }
 
-    const events = await Event.find(query)
-      .populate('organizerId', 'name avatarUrl')
-      .limit(parseInt(limit as string))
-      .sort({ startTime: 1 });
+    const docs = await eventsCol
+      .find(query)
+      .limit(parseInt(limit, 10))
+      .sort({ startTime: 1 })
+      .toArray();
 
-    // Get attendance info for each event
     const eventsWithAttendance = await Promise.all(
-      events.map(async (event) => {
-        const attendances = await Attendance.find({
-          eventId: event._id,
-          status: AttendanceStatus.APPROVED
-        }).select('puddingPhoto');
-
-        const puddingPreviews = attendances.slice(0, 5).map(a => a.puddingPhoto);
-
-        let distance = null;
-        if (lat && lng) {
-          const userLat = parseFloat(lat as string);
-          const userLng = parseFloat(lng as string);
-          distance = calculateDistance(
-            userLat,
-            userLng,
-            event.location.coordinates[1],
-            event.location.coordinates[0]
-          );
-        }
-
+      docs.map(async (ev) => {
+        const attendeeCount = await attendancesCol.countDocuments({ eventId: ev._id.toString(), status: { $in: ['PENDING', 'APPROVED'] } });
         return {
-          id: event._id,
-          title: event.title,
-          description: event.description,
-          location: {
-            lat: event.location.coordinates[1],
-            lng: event.location.coordinates[0]
-          },
-          city: event.city,
-          state: event.state,
-          startTime: event.startTime,
-          endTime: event.endTime,
-          attendeeLimit: event.attendeeLimit,
-          attendeeCount: attendances.length,
-          status: event.status,
-          organizer: event.organizerId,
-          puddingPreviews,
-          distance
+          id: ev._id.toString(),
+          title: ev.title,
+          description: ev.description,
+          location: { lat: ev.location?.coordinates?.[1], lng: ev.location?.coordinates?.[0] },
+          city: ev.city,
+          state: ev.state,
+          startTime: ev.startTime,
+          endTime: ev.endTime,
+          attendeeLimit: ev.attendeeLimit,
+          attendeeCount,
+          status: ev.status ?? 'UPCOMING',
+          organizer: ev.organizerId ? { id: ev.organizerId } : undefined,
         };
       })
     );
 
-    res.json({
-      events: eventsWithAttendance,
-      total: eventsWithAttendance.length
-    });
+    res.json({ events: eventsWithAttendance, total: eventsWithAttendance.length });
   } catch (error) {
     next(error);
   }
 });
 
+// GET /api/events/:id
 router.get('/:id', async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const userId = (req as AuthRequest).userId;
+    const { id } = req.params as any;
+    const db = getDb();
+    const eventsCol = db.collection('events');
+    const attendancesCol = db.collection('attendances');
 
-    const event = await Event.findById(id).populate('organizerId', 'name avatarUrl');
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const ev = await eventsCol.findOne({ _id: new ObjectId(id) });
+    if (!ev) return res.status(404).json({ error: 'Event not found' });
 
-    const attendances = await Attendance.find({
-      eventId: id,
-      status: AttendanceStatus.APPROVED
-    }).populate('userId', 'name avatarUrl');
+    const approved = await attendancesCol
+      .find({ eventId: id, status: 'APPROVED' })
+      .project({ userId: 1, puddingPhoto: 1, puddingName: 1, status: 1 })
+      .toArray();
 
-    let userAttendance = null;
-    if (userId) {
-      userAttendance = await Attendance.findOne({
-        userId,
-        eventId: id
-      });
-    }
-
-    const attendees = attendances.map(a => ({
-      id: (a.userId as any)._id,
-      name: (a.userId as any).name,
-      avatarUrl: (a.userId as any).avatarUrl,
+    const attendees = approved.map((a) => ({
+      id: a.userId,
+      name: undefined,
+      avatarUrl: undefined,
       puddingPhoto: a.puddingPhoto,
       puddingName: a.puddingName,
-      status: a.status
+      status: a.status,
     }));
 
     res.json({
       event: {
-        id: event._id,
-        title: event.title,
-        description: event.description,
-        location: {
-          lat: event.location.coordinates[1],
-          lng: event.location.coordinates[0]
-        },
-        city: event.city,
-        state: event.state,
-        address: event.address,
-        startTime: event.startTime,
-        endTime: event.endTime,
-        attendeeLimit: event.attendeeLimit,
-        status: event.status,
-        organizer: event.organizerId,
+        id: ev._id.toString(),
+        title: ev.title,
+        description: ev.description,
+        location: { lat: ev.location?.coordinates?.[1], lng: ev.location?.coordinates?.[0] },
+        city: ev.city,
+        state: ev.state,
+        address: ev.address,
+        startTime: ev.startTime,
+        endTime: ev.endTime,
+        attendeeLimit: ev.attendeeLimit,
+        status: ev.status ?? 'UPCOMING',
+        organizer: ev.organizerId,
         attendees,
-        userAttendance
-      }
+        userAttendance: null,
+      },
     });
   } catch (error) {
     next(error);
   }
 });
 
+// POST /api/events
 router.post('/', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const data = createEventSchema.parse(req.body);
@@ -182,84 +137,76 @@ router.post('/', authenticate, async (req: AuthRequest, res, next) => {
     const now = new Date();
 
     if (startTime <= new Date(now.getTime() + 60 * 60 * 1000)) {
-      return res.status(400).json({
-        error: 'Event must start at least 1 hour in the future'
-      });
+      return res.status(400).json({ error: 'Event must start at least 1 hour in the future' });
     }
-
     if (endTime <= startTime) {
-      return res.status(400).json({
-        error: 'End time must be after start time'
-      });
+      return res.status(400).json({ error: 'End time must be after start time' });
     }
 
-    const event = await Event.create({
+    const db = getDb();
+    const eventsCol = db.collection('events');
+
+    const result = await eventsCol.insertOne({
       title: data.title,
       description: data.description,
-      location: {
-        type: 'Point',
-        coordinates: [data.location.lng, data.location.lat]
-      },
+      location: { type: 'Point', coordinates: [data.location.lng, data.location.lat] },
       city: data.city,
       state: data.state,
-      address: data.address,
+      address: data.address ?? null,
       startTime,
       endTime,
       attendeeLimit: data.attendeeLimit,
-      organizerId: req.userId!
+      organizerId: req.userId!,
+      status: 'UPCOMING',
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
-    const populatedEvent = await Event.findById(event._id).populate('organizerId', 'name avatarUrl');
+    const ev = await eventsCol.findOne({ _id: result.insertedId });
 
-    res.status(201).json({ event: populatedEvent });
+    res.status(201).json({ event: ev });
   } catch (error) {
     next(error);
   }
 });
 
+// PATCH /api/events/:id
 router.patch('/:id', authenticate, async (req: AuthRequest, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as any;
+    const db = getDb();
+    const eventsCol = db.collection('events');
 
-    const event = await Event.findById(id);
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const ev = await eventsCol.findOne({ _id: new ObjectId(id) });
+    if (!ev) return res.status(404).json({ error: 'Event not found' });
 
-    if (event.organizerId.toString() !== req.userId) {
+    if (ev.organizerId !== req.userId) {
       return res.status(403).json({ error: 'Only organizer can edit event' });
     }
 
-    const updatedEvent = await Event.findByIdAndUpdate(
-      id,
-      { $set: req.body, updatedAt: new Date() },
-      { new: true }
-    ).populate('organizerId', 'name avatarUrl');
-
-    res.json({ event: updatedEvent });
+    await eventsCol.updateOne({ _id: new ObjectId(id) }, { $set: { ...req.body, updatedAt: new Date() } });
+    const updated = await eventsCol.findOne({ _id: new ObjectId(id) });
+    res.json({ event: updated });
   } catch (error) {
     next(error);
   }
 });
 
+// DELETE (cancel) /api/events/:id
 router.delete('/:id', authenticate, async (req: AuthRequest, res, next) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params as any;
+    const db = getDb();
+    const eventsCol = db.collection('events');
 
-    const event = await Event.findById(id);
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const ev = await eventsCol.findOne({ _id: new ObjectId(id) });
+    if (!ev) return res.status(404).json({ error: 'Event not found' });
 
-    if (event.organizerId.toString() !== req.userId) {
+    if (ev.organizerId !== req.userId) {
       return res.status(403).json({ error: 'Only organizer can delete event' });
     }
 
-    await Event.findByIdAndUpdate(id, {
-      status: EventStatus.CANCELLED,
-      updatedAt: new Date()
-    });
-
+    await eventsCol.updateOne({ _id: new ObjectId(id) }, { $set: { status: 'CANCELLED', updatedAt: new Date() } });
     res.json({ message: 'Event cancelled successfully' });
   } catch (error) {
     next(error);

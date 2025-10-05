@@ -1,9 +1,8 @@
 import express from 'express';
 import { z } from 'zod';
-import { Event } from '../models/Event';
-import { Attendance, AttendanceStatus } from '../models/Attendance';
-import { Message } from '../models/Message';
+import { getDb } from '../config/database';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { ObjectId } from 'mongodb';
 
 const router = express.Router();
 
@@ -14,41 +13,36 @@ const createMessageSchema = z.object({
 
 router.get('/events/:eventId/messages', authenticate, async (req: AuthRequest, res, next) => {
   try {
-    const { eventId } = req.params;
-    const { limit = '50', before } = req.query;
+    const { eventId } = req.params as any;
+    const { limit = '50', before } = req.query as any;
 
-    const event = await Event.findById(eventId);
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const db = getDb();
+    const events = db.collection('events');
+    const attendances = db.collection('attendances');
+    const messages = db.collection('messages');
 
-    const isOrganizer = event.organizerId.toString() === req.userId;
+    const ev = await events.findOne({ _id: new ObjectId(eventId) });
+    if (!ev) return res.status(404).json({ error: 'Event not found' });
+
+    const isOrganizer = ev.organizerId === req.userId;
 
     if (!isOrganizer) {
-      const attendance = await Attendance.findOne({
-        userId: req.userId!,
-        eventId
-      });
-
-      if (!attendance || attendance.status !== AttendanceStatus.APPROVED) {
+      const attendance = await attendances.findOne({ userId: req.userId!, eventId });
+      if (!attendance || attendance.status !== 'APPROVED') {
         return res.status(403).json({ error: 'Not authorized to view messages' });
       }
     }
 
     const query: any = { eventId };
-    if (before) {
-      query._id = { $lt: before };
-    }
+    if (before) query._id = { $lt: new ObjectId(before) };
 
-    const messages = await Message.find(query)
-      .populate('userId', 'name avatarUrl')
+    const docs = await messages
+      .find(query)
       .sort({ createdAt: -1 })
-      .limit(parseInt(limit as string));
+      .limit(parseInt(limit, 10))
+      .toArray();
 
-    res.json({
-      messages: messages.reverse(),
-      hasMore: messages.length === parseInt(limit as string)
-    });
+    res.json({ messages: docs.reverse(), hasMore: docs.length === parseInt(limit, 10) });
   } catch (error) {
     next(error);
   }
@@ -56,38 +50,37 @@ router.get('/events/:eventId/messages', authenticate, async (req: AuthRequest, r
 
 router.post('/events/:eventId/messages', authenticate, async (req: AuthRequest, res, next) => {
   try {
-    const { eventId } = req.params;
+    const { eventId } = req.params as any;
     const data = createMessageSchema.parse(req.body);
 
-    const event = await Event.findById(eventId);
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
+    const db = getDb();
+    const events = db.collection('events');
+    const attendances = db.collection('attendances');
+    const messages = db.collection('messages');
 
-    const isOrganizer = event.organizerId.toString() === req.userId;
+    const ev = await events.findOne({ _id: new ObjectId(eventId) });
+    if (!ev) return res.status(404).json({ error: 'Event not found' });
 
+    const isOrganizer = ev.organizerId === req.userId;
     if (!isOrganizer) {
-      const attendance = await Attendance.findOne({
-        userId: req.userId!,
-        eventId
-      });
-
-      if (!attendance || attendance.status !== AttendanceStatus.APPROVED) {
+      const attendance = await attendances.findOne({ userId: req.userId!, eventId });
+      if (!attendance || attendance.status !== 'APPROVED') {
         return res.status(403).json({ error: 'Not authorized to send messages' });
       }
     }
 
-    const message = await Message.create({
+    const doc = {
       content: data.content,
-      imageUrl: data.imageUrl,
+      imageUrl: data.imageUrl ?? null,
       userId: req.userId!,
-      eventId
-    });
+      eventId,
+      createdAt: new Date(),
+    };
 
-    const populatedMessage = await Message.findById(message._id)
-      .populate('userId', 'name avatarUrl');
+    const result = await messages.insertOne(doc);
+    const inserted = await messages.findOne({ _id: result.insertedId });
 
-    res.status(201).json({ message: populatedMessage });
+    res.status(201).json({ message: inserted });
   } catch (error) {
     next(error);
   }

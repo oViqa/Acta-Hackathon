@@ -49,8 +49,16 @@ async function seed() {
   await Attendance.deleteMany({});
   await Message.deleteMany({});
 
+  // Create admin user
+  const admin = await User.create({
+    email: 'admin@puddingmeetup.com',
+    passwordHash: await bcrypt.hash('admin123', 10),
+    name: 'Admin',
+  });
+  console.log(`✅ Created admin: ${admin.email}`);
+
   // Create test users
-  const users = [];
+  const users = [admin];
   for (let i = 1; i <= 5; i++) {
     const user = await User.create({
       email: `user${i}@puddingmeetup.com`,

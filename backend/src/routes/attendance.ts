@@ -1,8 +1,8 @@
 import express from 'express';
-import { Event } from '../models/Event';
-import { Attendance, AttendanceStatus } from '../models/Attendance';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { upload } from '../middleware/upload';
+import { getDb } from '../config/database';
+import { ObjectId } from 'mongodb';
 
 const router = express.Router();
 
@@ -12,45 +12,42 @@ router.post(
   upload.single('puddingPhoto'),
   async (req: AuthRequest, res, next) => {
     try {
-      const { eventId } = req.params;
-      const { puddingName, puddingDesc } = req.body;
+      const { eventId } = req.params as any;
+      const { puddingName, puddingDesc } = req.body as any;
 
       if (!req.file) {
         return res.status(400).json({ error: 'Pudding photo is required' });
       }
 
-      const event = await Event.findById(eventId);
-      if (!event) {
-        return res.status(404).json({ error: 'Event not found' });
-      }
+      const db = getDb();
+      const events = db.collection('events');
+      const attendances = db.collection('attendances');
 
-      const attendanceCount = await Attendance.countDocuments({
-        eventId,
-        status: { $in: [AttendanceStatus.PENDING, AttendanceStatus.APPROVED] }
-      });
+      const ev = await events.findOne({ _id: new ObjectId(eventId) });
+      if (!ev) return res.status(404).json({ error: 'Event not found' });
 
-      if (attendanceCount >= event.attendeeLimit) {
+      const attendanceCount = await attendances.countDocuments({ eventId, status: { $in: ['PENDING', 'APPROVED'] } });
+      if (attendanceCount >= ev.attendeeLimit) {
         return res.status(400).json({ error: 'Event is full' });
       }
 
-      const existingAttendance = await Attendance.findOne({
-        userId: req.userId!,
-        eventId
-      });
-
-      if (existingAttendance) {
+      const existing = await attendances.findOne({ userId: req.userId!, eventId });
+      if (existing) {
         return res.status(409).json({ error: 'Already joined this event' });
       }
 
-      const attendance = await Attendance.create({
+      const doc = {
         userId: req.userId!,
         eventId,
+        status: 'PENDING',
+        joinedAt: new Date(),
         puddingPhoto: `/uploads/${req.file.filename}`,
         puddingName,
-        puddingDesc
-      });
+        puddingDesc,
+      };
 
-      res.status(201).json({ attendance });
+      const result = await attendances.insertOne(doc);
+      return res.status(201).json({ attendance: { id: result.insertedId.toString(), ...doc } });
     } catch (error) {
       next(error);
     }
@@ -62,25 +59,24 @@ router.get(
   authenticate,
   async (req: AuthRequest, res, next) => {
     try {
-      const { eventId } = req.params;
+      const { eventId } = req.params as any;
+      const db = getDb();
+      const events = db.collection('events');
+      const attendances = db.collection('attendances');
 
-      const event = await Event.findById(eventId);
-      if (!event) {
-        return res.status(404).json({ error: 'Event not found' });
-      }
+      const ev = await events.findOne({ _id: new ObjectId(eventId) });
+      if (!ev) return res.status(404).json({ error: 'Event not found' });
 
-      if (event.organizerId.toString() !== req.userId) {
+      if (ev.organizerId !== req.userId) {
         return res.status(403).json({ error: 'Only organizer can view attendances' });
       }
 
-      const attendances = await Attendance.find({ eventId })
-        .populate('userId', 'name avatarUrl')
-        .sort({ joinedAt: -1 });
+      const list = await attendances.find({ eventId }).sort({ joinedAt: -1 }).toArray();
 
       const grouped = {
-        pending: attendances.filter(a => a.status === AttendanceStatus.PENDING),
-        approved: attendances.filter(a => a.status === AttendanceStatus.APPROVED),
-        rejected: attendances.filter(a => a.status === AttendanceStatus.REJECTED)
+        pending: list.filter(a => a.status === 'PENDING'),
+        approved: list.filter(a => a.status === 'APPROVED'),
+        rejected: list.filter(a => a.status === 'REJECTED'),
       };
 
       res.json(grouped);
@@ -95,30 +91,26 @@ router.patch(
   authenticate,
   async (req: AuthRequest, res, next) => {
     try {
-      const { eventId, attendanceId } = req.params;
-      const { status } = req.body;
+      const { eventId, attendanceId } = req.params as any;
+      const { status } = req.body as any;
 
-      const event = await Event.findById(eventId);
-      if (!event) {
-        return res.status(404).json({ error: 'Event not found' });
-      }
+      const db = getDb();
+      const events = db.collection('events');
+      const attendances = db.collection('attendances');
 
-      if (event.organizerId.toString() !== req.userId) {
+      const ev = await events.findOne({ _id: new ObjectId(eventId) });
+      if (!ev) return res.status(404).json({ error: 'Event not found' });
+
+      if (ev.organizerId !== req.userId) {
         return res.status(403).json({ error: 'Only organizer can update attendance' });
       }
 
       const updateData: any = { status };
-      if (status === AttendanceStatus.APPROVED) {
-        updateData.approvedAt = new Date();
-      }
+      if (status === 'APPROVED') updateData.approvedAt = new Date();
 
-      const attendance = await Attendance.findByIdAndUpdate(
-        attendanceId,
-        { $set: updateData },
-        { new: true }
-      );
-
-      res.json({ attendance });
+      await attendances.updateOne({ _id: new ObjectId(attendanceId) }, { $set: updateData });
+      const updated = await attendances.findOne({ _id: new ObjectId(attendanceId) });
+      res.json({ attendance: updated });
     } catch (error) {
       next(error);
     }
@@ -130,16 +122,11 @@ router.delete(
   authenticate,
   async (req: AuthRequest, res, next) => {
     try {
-      const { eventId } = req.params;
+      const { eventId } = req.params as any;
+      const db = getDb();
+      const attendances = db.collection('attendances');
 
-      await Attendance.findOneAndUpdate(
-        {
-          userId: req.userId!,
-          eventId
-        },
-        { $set: { status: AttendanceStatus.LEFT } }
-      );
-
+      await attendances.updateOne({ userId: req.userId!, eventId }, { $set: { status: 'LEFT' } });
       res.json({ message: 'You have left the event' });
     } catch (error) {
       next(error);
