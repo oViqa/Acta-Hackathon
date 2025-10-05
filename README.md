@@ -38,35 +38,6 @@ A modern, interactive meetup platform for pudding enthusiasts across Germany! Bu
 - **Attendance approval** system
 - **Live statistics** and activity monitoring
 
-## 🚀 Quick Deploy to Vercel
-
-### Option 1: One-Click Deploy
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/oViqa/global-hackathon-v1)
-
-### Option 2: Manual Deploy
-
-1. **Install Vercel CLI**:
-   ```bash
-   npm install -g vercel
-   ```
-
-2. **Login to Vercel**:
-   ```bash
-   vercel login
-   ```
-
-3. **Deploy**:
-   ```bash
-   ./deploy.sh
-   ```
-
-4. **Set Environment Variables** in Vercel dashboard:
-   ```
-   NEXT_PUBLIC_API_URL=https://your-project.vercel.app
-   JWT_SECRET=your-super-secret-jwt-key
-   MONGODB_URI=mongodb+srv://... (optional - app works without it)
-   ```
-
 ## 🛠️ Local Development
 
 ### Prerequisites
