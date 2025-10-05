@@ -18,7 +18,6 @@ interface Event {
 
 interface Attendance {
   _id: string;
-  userId: string;
   eventId: string;
   puddingPhoto: string;
   puddingName: string;
