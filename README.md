@@ -1,4 +1,4 @@
-# 🍮 Pudding Gabel Meetup Platform
+# 🍮 Pudding Mit Gabel Meetup Platform
 
 **Find your pudding people.**
 
