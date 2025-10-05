@@ -69,7 +69,6 @@ const EventDashboard: React.FC<EventDashboardProps> = ({ event, onClose, user })
         const mockAttendances: Attendance[] = [
           {
             _id: '1',
-            userId: 'user1',
             eventId: event.id,
             puddingPhoto: '/uploads/pudding1.jpg',
             puddingName: 'Chocolate Pudding',
@@ -84,7 +83,6 @@ const EventDashboard: React.FC<EventDashboardProps> = ({ event, onClose, user })
           },
           {
             _id: '2',
-            userId: 'user2',
             eventId: event.id,
             puddingPhoto: '/uploads/pudding2.jpg',
             puddingName: 'Vanilla Pudding',
