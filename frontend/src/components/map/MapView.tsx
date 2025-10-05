@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { MapPin, Users, Clock, Calendar, Plus, User } from 'lucide-react';
 import JoinEventModal from '../events/JoinEventModal';
@@ -8,23 +8,13 @@ import EventChat from '../chat/EventChat';
 import { eventsAPI } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 // Dynamically import Leaflet components to avoid SSR issues
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), {
-  ssr: false,
-});
-
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), {
-  ssr: false,
-});
-
-const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), {
-  ssr: false,
-});
-
-const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), {
-  ssr: false,
-});
+const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
+const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
 
 interface Event {
   id: string;
@@ -35,11 +25,7 @@ interface Event {
   startTime: string;
   attendeeLimit: number;
   attendeeCount: number;
-  organizer: {
-    name: string;
-    avatar?: string;
-  };
-  puddingPhotos: string[];
+  organizer?: { name: string; avatar?: string };
 }
 
 interface MapViewProps {
@@ -58,86 +44,110 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [selectedEventForJoin, setSelectedEventForJoin] = useState<Event | null>(null);
   const [selectedEventForChat, setSelectedEventForChat] = useState<Event | null>(null);
+  const [radiusKm, setRadiusKm] = useState<number>(20);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  const puddingIcon = useMemo(() =>
+    L.divIcon({
+      className: '',
+      html:
+        '<div style="width:28px;height:28px;border-radius:9999px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#fff;font-size:16px;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,.15)">🍮</div>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 28],
+      popupAnchor: [0, -28],
+    }),
+  []);
+
+  const meIcon = useMemo(() =>
+    L.divIcon({
+      className: '',
+      html:
+        '<div style="width:22px;height:22px;border-radius:9999px;display:flex;align-items:center;justify-content:center;background:#2563eb;color:#fff;font-size:12px;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,.15)">●</div>',
+      iconSize: [22, 22],
+      iconAnchor: [11, 22],
+      popupAnchor: [0, -22],
+    }),
+  []);
 
   // Germany center coordinates
   const defaultCenter: [number, number] = [51.1657, 10.4515];
   const defaultZoom = 6;
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        setIsLoading(true);
-        const response = await eventsAPI.getEvents();
-        setEvents(response.data);
-      } catch (error: any) {
-        console.error('Failed to fetch events:', error);
-        // Silently fallback to mock data if API fails (backend may not be running)
-        const mockEvents: Event[] = [
-          {
-            id: '1',
-            title: 'Schoko-Pudding Sonntag',
-            description: 'Let\'s meet at Alexanderplatz and share our favorite chocolate puddings! Bring your own spoon and fork!',
-            location: { lat: 52.520008, lng: 13.404954 },
-            city: 'Berlin',
-            startTime: '2025-10-06T15:00:00Z',
-            attendeeLimit: 15,
-            attendeeCount: 8,
-            organizer: {
-              name: 'Max Müller',
-              avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face'
-            },
-            puddingPhotos: [
-              'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=100&h=100&fit=crop',
-              'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=100&h=100&fit=crop',
-              'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=100&h=100&fit=crop',
-            ]
-          },
-          {
-            id: '2',
-            title: 'Vanille Vibes',
-            description: 'Vanilla pudding lovers unite! We\'ll taste different vanilla varieties and share recipes.',
-            location: { lat: 48.1351, lng: 11.5820 },
-            city: 'Munich',
-            startTime: '2025-10-07T14:00:00Z',
-            attendeeLimit: 12,
-            attendeeCount: 5,
-            organizer: {
-              name: 'Lisa Schmidt',
-              avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face'
-            },
-            puddingPhotos: [
-              'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=100&h=100&fit=crop',
-              'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=100&h=100&fit=crop',
-            ]
-          },
-          {
-            id: '3',
-            title: 'Caramel Connect',
-            description: 'Sweet caramel pudding meetup in the heart of Frankfurt. Bring your favorite caramel treats!',
-            location: { lat: 50.1109, lng: 8.6821 },
-            city: 'Frankfurt',
-            startTime: '2025-10-08T16:00:00Z',
-            attendeeLimit: 20,
-            attendeeCount: 12,
-            organizer: {
-              name: 'Tom Weber',
-              avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
-            },
-            puddingPhotos: [
-              'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=100&h=100&fit=crop',
-              'https://images.unsplash.com/photo-1551024506-0bccd828d307?w=100&h=100&fit=crop',
-              'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=100&h=100&fit=crop',
-            ]
-          }
-        ];
-        setEvents(mockEvents);
-      } finally {
-        setIsLoading(false);
+  const fetchEvents = async (opts?: { lat?: number; lng?: number; radiusKm?: number }) => {
+    try {
+      setIsLoading(true);
+      const params: any = {};
+      if (opts?.lat && opts?.lng) {
+        params.lat = opts.lat;
+        params.lng = opts.lng;
+        params.radius = (opts.radiusKm ?? radiusKm) * 1000; // meters
       }
-    };
+      const response = await eventsAPI.getEvents(params);
+      const payload = response.data;
+      const list = (payload.events ?? payload) as any[];
+      const mapped: Event[] = list.map((e: any) => ({
+        id: e.id,
+        title: e.title,
+        description: e.description,
+        location: e.location ?? { lat: e.location?.lat ?? e.location?.coordinates?.[1], lng: e.location?.lng ?? e.location?.coordinates?.[0] },
+        city: e.city,
+        startTime: e.startTime,
+        attendeeLimit: e.attendeeLimit,
+        attendeeCount: e.attendeeCount ?? 0,
+        organizer: e.organizer,
+      }));
+      setEvents(mapped);
+    } catch (error) {
+      console.error('Failed to fetch events:', error);
+      // fallback to mock data (unchanged)
+      const mockEvents: Event[] = [
+        { id: '1', title: 'Schoko-Pudding Sonntag', location: { lat: 52.520008, lng: 13.404954 }, city: 'Berlin', startTime: '2025-10-06T15:00:00Z', attendeeLimit: 15, attendeeCount: 8 },
+        { id: '2', title: 'Vanille Vibes', location: { lat: 48.1351, lng: 11.5820 }, city: 'Munich', startTime: '2025-10-07T14:00:00Z', attendeeLimit: 12, attendeeCount: 5 },
+        { id: '3', title: 'Caramel Connect', location: { lat: 50.1109, lng: 8.6821 }, city: 'Frankfurt', startTime: '2025-10-08T16:00:00Z', attendeeLimit: 20, attendeeCount: 12 },
+      ];
+      setEvents(mockEvents);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    // initial fetch (no location filter)
     fetchEvents();
-  }, [toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // refetch when userLocation or radius changes
+  useEffect(() => {
+    if (userLocation) {
+      fetchEvents({ lat: userLocation.lat, lng: userLocation.lng, radiusKm });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(userLocation), radiusKm]);
+
+  const requestLocation = () => {
+    if (!user) {
+      toast({ title: 'Login required', description: 'Please login to use location-based search.' });
+      onLogin();
+      return;
+    }
+    if (!('geolocation' in navigator)) {
+      toast({ title: 'Geolocation not supported', description: 'Your browser does not support geolocation.', variant: 'destructive' });
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+        toast({ title: 'Location set', description: 'Using your current location.' });
+      },
+      (err) => {
+        console.error(err);
+        toast({ title: 'Permission denied', description: 'Cannot access your location.', variant: 'destructive' });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const handleJoinEventSubmit = (joinData: any) => {
     console.log('Joining event:', joinData);
@@ -195,8 +205,27 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
               </div>
             </div>
             
-            {/* Right side - Create Event Button */}
+            {/* Right controls: radius + location + create/login */}
             <div className="flex items-center gap-3">
+              <select
+                value={radiusKm}
+                onChange={(e) => setRadiusKm(parseInt(e.target.value))}
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm hover:border-gray-400"
+                title="Radius"
+              >
+                {[5,10,20,30,50].map(km => (
+                  <option key={km} value={km}>{km} km</option>
+                ))}
+              </select>
+
+              <button
+                onClick={requestLocation}
+                className="px-3 py-2 text-sm rounded-lg border border-gray-300 hover:bg-gray-50"
+                title="Use my location"
+              >
+                Use My Location
+              </button>
+
               <button
                 onClick={onCreateEvent}
                 className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 shadow-sm transition-colors"
@@ -204,7 +233,7 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
                 <Plus className="w-4 h-4" />
                 <span>Create Event</span>
               </button>
-              
+
               {user ? (
                 <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
                   <User className="w-4 h-4 text-gray-600" />
@@ -226,8 +255,8 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
       {/* Map View */}
       <div className="h-full w-full pt-16">
         <MapContainer
-          center={defaultCenter}
-          zoom={defaultZoom}
+          center={userLocation ? [userLocation.lat, userLocation.lng] : defaultCenter}
+          zoom={userLocation ? 10 : defaultZoom}
           className="h-full w-full z-0"
           style={{ height: '100vh', width: '100%' }}
         >
@@ -235,53 +264,34 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          
+
+          {userLocation && (
+            <Marker position={[userLocation.lat, userLocation.lng]} icon={meIcon}>
+              <Popup>You are here</Popup>
+            </Marker>
+          )}
+
           {events.map((event) => (
             <Marker
               key={event.id}
               position={[event.location.lat, event.location.lng]}
-              eventHandlers={{
-                click: () => setSelectedEvent(event),
-              }}
+              icon={puddingIcon}
+              eventHandlers={{ click: () => setSelectedEvent(event) }}
             >
               <Popup className="custom-popup">
                 <div className="p-4 min-w-[280px]">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-bold text-lg text-gray-900 leading-tight">
-                      {event.title}
-                    </h3>
-                    <button
-                      onClick={() => setSelectedEvent(null)}
-                      className="text-gray-400 hover:text-gray-600 ml-2"
-                    >
-                      ×
-                    </button>
+                    <h3 className="font-bold text-lg text-gray-900 leading-tight">{event.title}</h3>
+                    <button onClick={() => setSelectedEvent(null)} className="text-gray-400 hover:text-gray-600 ml-2">×</button>
                   </div>
-                  
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="w-4 h-4 text-primary-500" />
-                      <span>{event.city}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="w-4 h-4 text-primary-500" />
-                      <span>{new Date(event.startTime).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Clock className="w-4 h-4 text-primary-500" />
-                      <span>{new Date(event.startTime).toLocaleTimeString()}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Users className="w-4 h-4 text-primary-500" />
-                      <span>{event.attendeeCount}/{event.attendeeLimit} joined</span>
-                    </div>
+                    <div className="flex items-center space-x-2"><MapPin className="w-4 h-4 text-primary-500" /><span>{event.city}</span></div>
+                    <div className="flex items-center space-x-2"><Calendar className="w-4 h-4 text-primary-500" /><span>{new Date(event.startTime).toLocaleDateString()}</span></div>
+                    <div className="flex items-center space-x-2"><Clock className="w-4 h-4 text-primary-500" /><span>{new Date(event.startTime).toLocaleTimeString()}</span></div>
+                    <div className="flex items-center space-x-2"><Users className="w-4 h-4 text-primary-500" /><span>{event.attendeeCount}/{event.attendeeLimit} joined</span></div>
                   </div>
-
                   <button 
-                    onClick={() => {
-                      setSelectedEventForJoin(event);
-                      setIsJoinEventModalOpen(true);
-                    }}
+                    onClick={() => { setSelectedEventForJoin(event); setIsJoinEventModalOpen(true); }}
                     className="bg-orange-500 hover:bg-orange-600 text-white w-full text-sm py-2 rounded-lg"
                   >
                     Join Event 🍮
