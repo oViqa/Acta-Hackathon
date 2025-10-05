@@ -20,6 +20,10 @@ router.post(
       }
 
       const db = getDb();
+      if (!db) {
+        return res.status(500).json({ error: 'Database not available' });
+      }
+      
       const events = db.collection('events');
       const attendances = db.collection('attendances');
 
@@ -61,6 +65,10 @@ router.get(
     try {
       const { eventId } = req.params as any;
       const db = getDb();
+      if (!db) {
+        return res.status(500).json({ error: 'Database not available' });
+      }
+      
       const events = db.collection('events');
       const attendances = db.collection('attendances');
 
@@ -95,6 +103,10 @@ router.patch(
       const { status } = req.body as any;
 
       const db = getDb();
+      if (!db) {
+        return res.status(500).json({ error: 'Database not available' });
+      }
+      
       const events = db.collection('events');
       const attendances = db.collection('attendances');
 
@@ -124,6 +136,10 @@ router.delete(
     try {
       const { eventId } = req.params as any;
       const db = getDb();
+      if (!db) {
+        return res.status(500).json({ error: 'Database not available' });
+      }
+      
       const attendances = db.collection('attendances');
 
       await attendances.updateOne({ userId: req.userId!, eventId }, { $set: { status: 'LEFT' } });

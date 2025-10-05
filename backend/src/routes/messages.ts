@@ -17,6 +17,10 @@ router.get('/events/:eventId/messages', authenticate, async (req: AuthRequest, r
     const { limit = '50', before } = req.query as any;
 
     const db = getDb();
+    if (!db) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
     const events = db.collection('events');
     const attendances = db.collection('attendances');
     const messages = db.collection('messages');
@@ -54,6 +58,10 @@ router.post('/events/:eventId/messages', authenticate, async (req: AuthRequest, 
     const data = createMessageSchema.parse(req.body);
 
     const db = getDb();
+    if (!db) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
     const events = db.collection('events');
     const attendances = db.collection('attendances');
     const messages = db.collection('messages');

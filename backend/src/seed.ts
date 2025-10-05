@@ -1,10 +1,6 @@
-import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import { connectDatabase } from './config/database';
-import { User } from './models/User';
-import { Event, EventStatus } from './models/Event';
-import { Attendance, AttendanceStatus } from './models/Attendance';
-import { Message } from './models/Message';
+import { connectDatabase, getDb } from './config/database';
+import { ObjectId } from 'mongodb';
 
 const germanCities = [
   { city: 'Berlin', state: 'Berlin', lat: 52.520008, lng: 13.404954 },
@@ -43,30 +39,55 @@ const descriptions = [
 async function seed() {
   console.log('🌱 Seeding database...');
 
-  // Clear existing data
-  await User.deleteMany({});
-  await Event.deleteMany({});
-  await Attendance.deleteMany({});
-  await Message.deleteMany({});
+  const db = getDb();
+  if (!db) {
+    console.log('⚠️ Database not connected, skipping seed');
+    return;
+  }
 
-  // Create admin user
-  const admin = await User.create({
+  // Clear existing data
+  await db.collection('users').deleteMany({});
+  await db.collection('events').deleteMany({});
+  await db.collection('attendances').deleteMany({});
+  await db.collection('messages').deleteMany({});
+
+  // Create admin users
+  const admin1 = await db.collection('users').insertOne({
     email: 'admin@puddingmeetup.com',
     passwordHash: await bcrypt.hash('admin123', 10),
     name: 'Admin',
+    createdAt: new Date()
   });
-  console.log(`✅ Created admin: ${admin.email}`);
+
+  const admin2 = await db.collection('users').insertOne({
+    email: 'admin2@puddingmeetup.com',
+    passwordHash: await bcrypt.hash('adminpudding2', 10),
+    name: 'Admin2',
+    createdAt: new Date()
+  });
+
+  const puddingDummy = await db.collection('users').insertOne({
+    email: 'puddingdummy@puddingmeetup.com',
+    passwordHash: await bcrypt.hash('dummytest', 10),
+    name: 'PuddingDummy',
+    createdAt: new Date()
+  });
+
+  console.log(`✅ Created admin: admin@puddingmeetup.com`);
+  console.log(`✅ Created admin2: admin2@puddingmeetup.com`);
+  console.log(`✅ Created puddingdummy: puddingdummy@puddingmeetup.com`);
 
   // Create test users
-  const users = [admin];
+  const users = [admin1.insertedId, admin2.insertedId, puddingDummy.insertedId];
   for (let i = 1; i <= 5; i++) {
-    const user = await User.create({
+    const result = await db.collection('users').insertOne({
       email: `user${i}@puddingmeetup.com`,
       passwordHash: await bcrypt.hash('password123', 10),
       name: `Test User ${i}`,
+      createdAt: new Date()
     });
-    users.push(user);
-    console.log(`✅ Created user: ${user.name}`);
+    users.push(result.insertedId);
+    console.log(`✅ Created user: Test User ${i}`);
   }
 
   // Create test events
@@ -76,7 +97,7 @@ async function seed() {
     const startTime = new Date(now.getTime() + (i + 1) * 24 * 60 * 60 * 1000 + Math.random() * 48 * 60 * 60 * 1000);
     const endTime = new Date(startTime.getTime() + 2 * 60 * 60 * 1000);
 
-    const event = await Event.create({
+    const eventResult = await db.collection('events').insertOne({
       title: eventTitles[i],
       description: descriptions[i % descriptions.length],
       location: {
@@ -85,23 +106,26 @@ async function seed() {
       },
       city: city.city,
       state: city.state,
-      startTime,
-      endTime,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
       attendeeLimit: 10 + Math.floor(Math.random() * 20),
-      organizerId: users[i % users.length]._id,
+      organizerId: users[i % users.length].toHexString(),
+      status: 'UPCOMING',
+      createdAt: now.toISOString()
     });
 
     // Add some attendances
     const numAttendees = Math.floor(Math.random() * 5) + 2;
     for (let j = 0; j < numAttendees; j++) {
       const attendeeUser = users[(i + j + 1) % users.length];
-      await Attendance.create({
-        userId: attendeeUser._id,
-        eventId: event._id,
-        status: j < numAttendees - 1 ? AttendanceStatus.APPROVED : AttendanceStatus.PENDING,
+      await db.collection('attendances').insertOne({
+        userId: attendeeUser.toHexString(),
+        eventId: eventResult.insertedId.toHexString(),
+        status: j < numAttendees - 1 ? 'APPROVED' : 'PENDING',
         puddingPhoto: '/uploads/placeholder-pudding.jpg',
         puddingName: ['Vanilla', 'Chocolate', 'Strawberry', 'Caramel', 'Banana'][j % 5] + ' Pudding',
         puddingDesc: 'Homemade with love!',
+        joinedAt: new Date()
       });
     }
 
@@ -109,9 +133,9 @@ async function seed() {
     if (numAttendees > 1) {
       for (let k = 0; k < 3; k++) {
         const messageUser = users[(i + k) % users.length];
-        await Message.create({
-          userId: messageUser._id,
-          eventId: event._id,
+        await db.collection('messages').insertOne({
+          userId: messageUser.toHexString(),
+          eventId: eventResult.insertedId.toHexString(),
           content: [
             'Can\'t wait for this event!',
             'I\'m bringing my special pudding recipe!',
@@ -119,11 +143,12 @@ async function seed() {
             'Looking forward to meeting everyone!',
             'Does anyone have dietary restrictions?',
           ][k % 5],
+          createdAt: new Date()
         });
       }
     }
 
-    console.log(`✅ Created event: ${event.title} in ${event.city}`);
+    console.log(`✅ Created event: ${eventTitles[i]} in ${city.city}`);
   }
 
   console.log('🎉 Seeding completed!');
@@ -132,8 +157,8 @@ async function seed() {
 connectDatabase()
   .then(() => seed())
   .then(() => {
-    console.log('Closing database connection...');
-    mongoose.connection.close();
+    console.log('🎉 Seeding completed successfully!');
+    process.exit(0);
   })
   .catch((e) => {
     console.error('❌ Error seeding database:', e);

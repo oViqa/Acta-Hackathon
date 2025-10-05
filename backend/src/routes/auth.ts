@@ -23,6 +23,16 @@ router.post('/simple/register', async (req, res) => {
   try {
     const { name, email, password } = req.body as { name: string; email: string; password: string };
     const db = getDb();
+    
+    if (!db) {
+      // Mock response when DB is not available
+      return res.status(201).json({
+        message: 'User registered (mock mode)',
+        user: { id: 'mock-user-id', email, name },
+        token: 'mock-token-for-testing',
+      });
+    }
+    
     const users = db.collection('users');
 
     await users.createIndex({ email: 1 }, { unique: true });
@@ -51,6 +61,26 @@ router.post('/simple/login', async (req, res) => {
   try {
     const { email, password } = req.body as { email: string; password: string };
     const db = getDb();
+    
+    if (!db) {
+      // Mock login for testing
+      const mockUsers = [
+        { email: 'admin@puddingmeetup.com', password: 'admin123', name: 'Admin User', id: 'mock-admin-id' },
+        { email: 'admin2@puddingmeetup.com', password: 'adminpudding2', name: 'Admin2 User', id: 'mock-admin2-id' },
+        { email: 'puddingdummy@puddingmeetup.com', password: 'dummytest', name: 'PuddingDummy', id: 'mock-dummy-id' },
+      ];
+      
+      const mockUser = mockUsers.find(u => u.email === email && u.password === password);
+      if (mockUser) {
+        return res.json({
+          message: 'Login successful (mock mode)',
+          user: { id: mockUser.id, email, name: mockUser.name },
+          token: `mock-${mockUser.id}-token`,
+        });
+      }
+      return res.status(401).json({ error: 'Invalid credentials (mock mode)' });
+    }
+    
     const users = db.collection('users');
 
     const user = await users.findOne({ email });
@@ -79,6 +109,10 @@ router.post('/register', async (req, res, next) => {
     const { email, password, name } = registerSchema.parse(req.body);
 
     const db = getDb();
+    if (!db) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
     const users = db.collection('users');
 
     await users.createIndex({ email: 1 }, { unique: true });
@@ -122,6 +156,10 @@ router.post('/login', async (req, res, next) => {
     const { email, password } = loginSchema.parse(req.body);
 
     const db = getDb();
+    if (!db) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
     const users = db.collection('users');
 
     const user = await users.findOne({ email });
@@ -156,6 +194,10 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 router.get('/me', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const db = getDb();
+    if (!db) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
     const users = db.collection('users');
     const events = db.collection('events');
     const attendances = db.collection('attendances');

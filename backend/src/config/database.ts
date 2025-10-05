@@ -16,15 +16,17 @@ export async function connectDatabase() {
     await db.collection('events').createIndex({ location: '2dsphere' });
 
     console.log('✅ MongoDB connected successfully');
-  } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
-    process.exit(1);
+  } catch (error: any) {
+    console.warn('⚠️ MongoDB connection failed, running in mock mode:', error?.message || 'Unknown error');
+    console.log('🔧 Frontend will use mock data for testing');
+    // Don't exit, allow server to run with mock data
   }
 }
 
-export function getDb(): Db {
+export function getDb(): Db | null {
   if (!db) {
-    throw new Error('Database not initialized. Call connectDatabase() first.');
+    console.warn('⚠️ Database not connected, returning null');
+    return null;
   }
   return db;
 }

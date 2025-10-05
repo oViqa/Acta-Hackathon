@@ -25,6 +25,63 @@ router.get('/', async (req, res, next) => {
     const { lat, lng, radius = '100000', status = 'UPCOMING', limit = '50' } = req.query as any;
 
     const db = getDb();
+    
+    if (!db) {
+      // Return mock events when DB is not available
+      const mockEvents = [
+        {
+          id: 'mock-1',
+          title: 'Schoko-Pudding Sonntag',
+          description: 'Join us for the best chocolate pudding in Berlin!',
+          location: { lat: 52.520008, lng: 13.404954 },
+          city: 'Berlin',
+          state: 'Berlin',
+          startTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+          endTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000).toISOString(),
+          attendeeLimit: 15,
+          attendeeCount: 8,
+          status: 'UPCOMING',
+          organizer: { id: 'mock-organizer' },
+          createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago - HOT!
+          isHot: true
+        },
+        {
+          id: 'mock-2',
+          title: 'Vanille Vibes',
+          description: 'Smooth vanilla pudding meetup in Munich',
+          location: { lat: 48.1351, lng: 11.5820 },
+          city: 'Munich',
+          state: 'Bavaria',
+          startTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+          endTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(),
+          attendeeLimit: 12,
+          attendeeCount: 5,
+          status: 'UPCOMING',
+          organizer: { id: 'mock-organizer-2' },
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+          isHot: false
+        },
+        {
+          id: 'mock-3',
+          title: 'Caramel Connect',
+          description: 'Sweet caramel pudding gathering in Frankfurt',
+          location: { lat: 50.1109, lng: 8.6821 },
+          city: 'Frankfurt',
+          state: 'Hesse',
+          startTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+          endTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000).toISOString(),
+          attendeeLimit: 20,
+          attendeeCount: 12,
+          status: 'UPCOMING',
+          organizer: { id: 'mock-organizer-3' },
+          createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
+          isHot: false
+        }
+      ];
+      
+      return res.json({ events: mockEvents, total: mockEvents.length });
+    }
+    
     const eventsCol = db.collection('events');
     const attendancesCol = db.collection('attendances');
 
@@ -80,6 +137,10 @@ router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params as any;
     const db = getDb();
+    if (!db) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
     const eventsCol = db.collection('events');
     const attendancesCol = db.collection('attendances');
 
@@ -144,6 +205,10 @@ router.post('/', authenticate, async (req: AuthRequest, res, next) => {
     }
 
     const db = getDb();
+    if (!db) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
     const eventsCol = db.collection('events');
 
     const result = await eventsCol.insertOne({
@@ -175,6 +240,10 @@ router.patch('/:id', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const { id } = req.params as any;
     const db = getDb();
+    if (!db) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
     const eventsCol = db.collection('events');
 
     const ev = await eventsCol.findOne({ _id: new ObjectId(id) });
@@ -197,6 +266,10 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res, next) => {
   try {
     const { id } = req.params as any;
     const db = getDb();
+    if (!db) {
+      return res.status(500).json({ error: 'Database not available' });
+    }
+    
     const eventsCol = db.collection('events');
 
     const ev = await eventsCol.findOne({ _id: new ObjectId(id) });
