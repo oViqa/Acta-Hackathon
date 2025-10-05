@@ -1,190 +1,234 @@
-# 🍮 Pudding Mit Gabel Meetup Platform
+# 🍮 Pudding mit Gabel - Find Your Pudding People
 
-**Find your pudding people.**
-
-A web-first, location-based social platform for organizing and discovering "pudding with fork" meetup events across Germany. Built during a 24-hour hackathon, this demo showcases real-time community interaction, instant event creation, and gamified food culture trends.
-
-![Pudding Gabel Banner](https://via.placeholder.com/1200x400/FF6B9D/FFFFFF?text=Pudding+Gabel+Meetup)
-
----
-
-## 🎯 Overview
-
-Pudding Gabel connects food enthusiasts through quirky, hyperlocal meetup events centered around Germany's beloved pudding-with-fork culture. Whether you're organizing a spontaneous dessert gathering or looking for your next food adventure, our platform makes it instant, visual, and community-driven.
-
----
+A modern, interactive meetup platform for pudding enthusiasts across Germany! Built with Next.js, TypeScript, and MongoDB.
 
 ## ✨ Features
 
-### Core Functionality
-- **🗺️ Interactive Germany Map** – Custom pudding event markers with real-time updates
-- **⚡ Instant Event Creation** – Pin location, set details (title, time, attendee limit), upload pudding photo
-- **📸 Photo-First Joining** – Upload your pudding photo to join events; organizers approve attendees
-- **💬 Real-Time Group Chat** – Approved attendees get instant messaging with image support via Socket.io
-- **🔍 Smart Discovery** – Filter events by radius and date, with visual distance indicators
-- **🎨 Instagram-Worthy UI** – Smooth animations, responsive design built with TailwindCSS & shadcn/ui
+### 🎯 Live Map with Advanced Features
+- **Pulsing markers** for new events with custom pudding icons
+- **HOT badges** 🔥 for events created in the last 10 minutes
+- **Ripple effects** on marker clicks
+- **Location circle** showing search radius
+- **Geolocation-based** radius filtering (5km, 10km, 20km, 30km, 50km)
+- **"Events Around Me"** button with visual radius display
 
-### Ready for Growth
-- Authentication system (JWT-based)
-- Moderation tools for organizers
-- Notification infrastructure
-- Gamification-ready architecture
+### 🌙 Dark/Light Mode & Language Support
+- **Theme toggle** with persistent storage
+- **English/German** language switching
+- **Smooth transitions** and animations
+- **Responsive design** for all devices
 
----
+### 🎮 Gamification & Discovery
+- **Floating action button** for easy event creation
+- **Live leaderboard** with points system
+- **Event dashboard** for organizers to manage attendances
+- **Admin dashboard** with full analytics
 
-## 👥 Target Audience
+### 🎨 Modern UI/UX
+- **Hover animations** and smooth transitions
+- **Loading skeletons** instead of spinners
+- **Pudding-themed** color scheme and gradients
+- **Kleinanzeigen-style** header design
 
-**Young adults (18-35)** who love food trends, community connections, and social experiences.
+### 🔐 Admin Features
+- **Multiple admin accounts** for testing
+  - `admin2@puddingmeetup.com` / `adminpudding2`
+  - `puddingdummy@puddingmeetup.com` / `dummytest`
+- **Event management** dashboard for organizers
+- **Attendance approval** system
+- **Live statistics** and activity monitoring
 
-### Example Personas
-- **Lisa (Berlin)** – Craves quirky local meetups and authentic connections
-- **Max (Munich)** – Passionate about organizing community food events
-- **Sarah (Hamburg)** – Social media enthusiast seeking shareable experiences
+## 🚀 Quick Deploy to Vercel
 
----
+### Option 1: One-Click Deploy
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/oViqa/global-hackathon-v1)
 
-## 🛠️ Tech Stack
+### Option 2: Manual Deploy
 
-### Frontend
-- **Framework:** Next.js 14 (TypeScript)
-- **Styling:** TailwindCSS
-- **Mapping:** Leaflet.js
-- **State Management:** Zustand
+1. **Install Vercel CLI**:
+   ```bash
+   npm install -g vercel
+   ```
 
-### Backend
-- **Runtime:** Node.js 20
-- **Database:** MongoDB
-- **Authentication:** Session-based
+2. **Login to Vercel**:
+   ```bash
+   vercel login
+   ```
 
-### DevOps
-- **Frontend Hosting:** Vercel
-- **Backend Hosting:** Railway / Render
-- **Database:** Supabase
-- **CI/CD:** GitHub Actions
+3. **Deploy**:
+   ```bash
+   ./deploy.sh
+   ```
 
----
+4. **Set Environment Variables** in Vercel dashboard:
+   ```
+   NEXT_PUBLIC_API_URL=https://your-project.vercel.app
+   JWT_SECRET=your-super-secret-jwt-key
+   MONGODB_URI=mongodb+srv://... (optional - app works without it)
+   ```
 
-## 🚀 Getting Started
+## 🛠️ Local Development
 
 ### Prerequisites
-- Node.js 18+ and npm/yarn
-- Git
+- Node.js 20+
+- npm 10+
 
-### Installation
+### Setup
+```bash
+# Clone the repository
+git clone https://github.com/oViqa/global-hackathon-v1.git
+cd global-hackathon-v1
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/oViqa/global-hackathon-v1.git
-   cd global-hackathon-v1
-   ```
+# Install dependencies
+npm run install:all
 
-2. **Install dependencies**
-   ```bash
-   # Frontend
-   cd frontend
-   npm install
+# Start development servers
+npm run dev
+```
 
-   # Backend
-   cd ../backend
-   npm install
-   ```
+### Access Points
+- **Frontend**: http://localhost:3002
+- **Backend API**: http://localhost:3001
+- **Admin Login**: 
+  - `admin2@puddingmeetup.com` / `adminpudding2`
+  - `puddingdummy@puddingmeetup.com` / `dummytest`
 
-3. **Environment setup**
-   ```bash
-   # Frontend
-   cp .env.example .env.local
-   
-   # Backend
-   cp .env.example .env
-   ```
-   
-   Fill in required environment variables (see [Environment Variables](#environment-variables) section).
+## 🏗️ Project Structure
 
-4. **Database setup**
-   ```bash
-   cd backend
-   npx prisma migrate dev
-   npx prisma db seed  # Optional: seed with example data
-   ```
+```
+/
+├── frontend/                 # Next.js 14 app
+│   ├── src/
+│   │   ├── app/             # App Router pages
+│   │   ├── components/      # React components
+│   │   │   ├── map/         # Map components
+│   │   │   ├── admin/       # Admin dashboard
+│   │   │   ├── leaderboard/ # Leaderboard
+│   │   │   ├── events/      # Event management
+│   │   │   └── ui/          # UI components
+│   │   ├── store/           # Zustand stores
+│   │   ├── hooks/           # Custom hooks
+│   │   └── lib/             # Utilities & API
+├── backend/
+│   ├── src/                 # Backend source
+│   │   ├── routes/          # API routes
+│   │   ├── config/          # Database config
+│   │   └── middleware/      # Auth & error handling
+│   └── api/                 # Vercel serverless functions
+├── vercel.json              # Vercel configuration
+└── deploy.sh                # Deployment script
+```
 
-5. **Run development servers**
-   ```bash
-   # Frontend (from /frontend directory)
-   npm run dev
-   # Runs on http://localhost:3000
+## 🎮 Testing Features
 
-   # Backend (from /backend directory)
-   npm run dev
-   # Runs on http://localhost:5000
-   ```
+### 1. **Map Interactions**
+- Click pudding markers for ripple effects
+- Use "Events Around Me" for location-based filtering
+- Adjust radius to see location circle change size
+- Watch for HOT badges on recent events
 
----
+### 2. **Event Management**
+- Create events with floating action button
+- Manage attendances in event dashboard
+- Approve/reject join requests
+- View pudding photos from attendees
 
-## 📱 Core User Flows
+### 3. **Theme & Language**
+- Toggle dark/light mode in header
+- Switch between English/German
+- All text updates automatically
 
-### For Attendees
-1. **Discover** – Browse interactive map or list view with filters
-2. **Join** – Select event → Upload pudding photo → Wait for approval
-3. **Connect** – Get approved → Access group chat → Meet your people!
+### 4. **Admin Dashboard**
+- Login with admin accounts
+- View analytics and statistics
+- Manage users and events
 
-### For Organizers
-1. **Create** – Pin map location → Set event details → Publish instantly
-2. **Manage** – Review join requests with photos → Approve/reject attendees
-3. **Moderate** – Edit event details, manage chat, cancel if needed
+### 5. **Leaderboard**
+- Click the 🏆 trophy button
+- See live rankings with points
+- Animated badges for top users
 
-### Discovery Features
-- **Radius Filter** – Find events within 5km, 10km, 25km, or 50km
-- **Date Filter** – Today, this week, this month, or custom range
-- **Map/List Toggle** – Visual exploration or detailed list view
-- **Distance Indicators** – Know exactly how far each event is
+## 🗄️ Database (Optional)
 
----
+The app works perfectly **without a database** using mock data. For full functionality:
 
-## 🤝 Contributing
+### MongoDB Atlas Setup
+1. Create account at [mongodb.com/atlas](https://mongodb.com/atlas)
+2. Create a cluster
+3. Get connection string
+4. Set `MONGODB_URI` in environment variables
 
-We welcome contributions! Please follow these guidelines:
+### Without MongoDB
+- App runs in **mock mode**
+- Sample events with realistic data
+- All features work except persistence
 
-### Branch Naming
-- `feature/your-feature-name`
-- `bugfix/issue-description`
-- `refactor/component-name`
+## 🔧 Environment Variables
 
-### Pull Request Process
-1. Fork the repository
-2. Create your feature branch
-3. Write/update tests for new features
-4. Run test suites: `npm test` (both frontend and backend)
-5. Ensure code follows existing style (run `npm run lint`)
-6. Submit PR with clear description
+### Required for Production
+```
+NEXT_PUBLIC_API_URL=https://your-domain.vercel.app
+JWT_SECRET=your-super-secret-jwt-key
+```
 
-### Code Standards
-- TypeScript for type safety
-- Component-based architecture
-- Meaningful commit messages
-- Documentation for new features
+### Optional
+```
+MONGODB_URI=mongodb+srv://...
+MONGODB_DB=puddingmeetup
+NODE_ENV=production
+```
 
+## 🚀 Deployment Options
+
+### Vercel (Recommended)
+- **Zero config** deployment
+- **Automatic HTTPS**
+- **Global CDN**
+- **Serverless functions**
+
+### Other Platforms
+- **Netlify**: Use Netlify Functions
+- **Railway**: Full-stack deployment
+- **Heroku**: Traditional hosting
+- **AWS**: Elastic Beanstalk
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Map not loading**
+   - Check Leaflet CSS import
+   - Verify API endpoints
+
+2. **Admin login fails**
+   - Use exact credentials from README
+   - Check JWT_SECRET is set
+
+3. **Build fails**
+   - Ensure all dependencies installed
+   - Check TypeScript errors
+
+4. **API errors**
+   - Verify environment variables
+   - Check CORS settings
+
+### Getting Help
+- Check the [Issues](https://github.com/oViqa/global-hackathon-v1/issues) page
+- Create a new issue with details
+- Include browser console logs
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-Built with ❤️ during [Hackathon Name] 2025. Special thanks to:
-- The hackathon organizers
-- Open-source community for amazing tools
-- Germany's pudding enthusiasts for inspiration
+- **Leaflet** for map functionality
+- **Next.js** for the amazing framework
+- **Tailwind CSS** for styling
+- **MongoDB** for data persistence
+- **Vercel** for hosting
 
 ---
 
-## 📞 Contact & Support
-
-- **Repository:** [github.com/oViqa/global-hackathon-v1](https://github.com/oViqa/global-hackathon-v1)
-- **Issues:** Report bugs or request features via GitHub Issues
-- **Discussions:** Join our community discussions on GitHub
-
----
-
-**Made with 🍮 and ⚡ in 24 hours**
+**Made with 🍮 by pudding enthusiasts, for pudding enthusiasts!**

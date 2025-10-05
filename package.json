@@ -5,18 +5,23 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd apps/backend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "build": "npm run build:frontend && npm run build:backend",
-    "build:backend": "cd apps/backend && npm run build",
+    "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
-    "install:all": "npm install && cd frontend && npm install && cd ../apps/backend && npm install",
-    "clean": "rm -rf frontend/.next apps/backend/dist",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "clean": "rm -rf frontend/.next backend/dist",
     "lint": "cd frontend && npm run lint",
-    "type-check": "cd frontend && npm run type-check"
+    "type-check": "cd frontend && npm run type-check",
+    "deploy": "vercel --prod",
+    "deploy:preview": "vercel",
+    "vercel:login": "npx vercel login",
+    "vercel:link": "npx vercel link"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "vercel": "^48.2.0"
   },
   "engines": {
     "node": ">=20.0.0",
