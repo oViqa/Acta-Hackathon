@@ -29,8 +29,8 @@ This guide will help you deploy the Pudding mit Gabel meetup platform to Vercel.
 3. **Configure Project**
    - **Framework Preset**: Next.js
    - **Root Directory**: `frontend`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `.next`
+   - **Build Command**: Leave default or use `npm run build`
+   - **Install Command**: Leave default or use `npm install`
 
 4. **Set Environment Variables**
    ```
