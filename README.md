@@ -1,6 +1,6 @@
 # 🍮 Pudding mit Gabel - Find Your Pudding People
 
-A modern, interactive meetup platform for pudding enthusiasts across Germany! Built with Next.js, TypeScript, and MongoDB.
+A modern, interactive meetup platform for pudding enthusiasts around the World! Built with Next.js, TypeScript, and MongoDB.
 
 ## ✨ Features
 
@@ -9,7 +9,6 @@ A modern, interactive meetup platform for pudding enthusiasts across Germany! Bu
 - **HOT badges** 🔥 for events created in the last 10 minutes
 - **Ripple effects** on marker clicks
 - **Location circle** showing search radius
-- **Geolocation-based** radius filtering (5km, 10km, 20km, 30km, 50km)
 - **"Events Around Me"** button with visual radius display
 
 ### 🌙 Dark/Light Mode & Language Support
@@ -173,7 +172,6 @@ NODE_ENV=production
 
 2. **Admin login fails**
    - Use exact credentials from README
-   - Check JWT_SECRET is set
 
 3. **Build fails**
    - Ensure all dependencies installed
