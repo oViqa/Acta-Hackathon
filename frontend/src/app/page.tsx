@@ -8,17 +8,7 @@ import { CreateEventDialog } from '@/components/events/CreateEventDialog';
 import { Button } from '@/components/ui/button';
 import { Plus, User, Menu } from 'lucide-react';
 
-const MapView = dynamic(() => import('@/components/map/MapView'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-        <p className="text-lg font-medium text-gray-600">Loading pudding map...</p>
-      </div>
-    </div>
-  )
-});
+import FunctionalMapView from '@/components/map/FunctionalMapView';
 
 export default function Home() {
   const { user, isLoading } = useAuthStore();
@@ -48,7 +38,7 @@ export default function Home() {
       <main className="relative w-full h-screen overflow-hidden">
         {/* Map - Full screen, no header */}
         <div className="w-full h-full">
-          <MapView onCreateEvent={handleCreateEvent} onLogin={() => setShowLogin(true)} user={user} />
+          <FunctionalMapView onCreateEvent={handleCreateEvent} onLogin={() => setShowLogin(true)} user={user} />
         </div>
 
         {/* Dialogs */}

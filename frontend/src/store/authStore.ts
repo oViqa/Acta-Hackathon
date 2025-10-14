@@ -23,7 +23,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false, // Start with false to avoid loading screen
 
   login: async (email, password) => {
     set({ isLoading: true });
@@ -75,5 +75,13 @@ export const useAuthStore = create<AuthState>((set) => ({
 
 // Initialize auth check
 if (typeof window !== 'undefined') {
+  // Set a timeout to ensure loading state is cleared even if checkAuth fails
+  setTimeout(() => {
+    const state = useAuthStore.getState();
+    if (state.isLoading) {
+      useAuthStore.setState({ isLoading: false });
+    }
+  }, 5000); // 5 second timeout
+  
   useAuthStore.getState().checkAuth();
 }

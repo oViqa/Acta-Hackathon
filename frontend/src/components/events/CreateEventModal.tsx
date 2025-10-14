@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, MapPin, Calendar, Clock, Users, FileText, Camera, Upload } from 'lucide-react';
+import LocationPicker from '../map/LocationPicker';
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -20,7 +21,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
     puddingPhoto: null as File | null,
   });
 
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address?: string } | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -37,19 +38,27 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
     }
   };
 
+  const handleLocationSelect = (location: { lat: number; lng: number; address?: string }) => {
+    setSelectedLocation(location);
+    // Update the location text field with the address if available
+    if (location.address) {
+      setFormData(prev => ({ ...prev, location: location.address! }));
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validation
-    if (!formData.title || !formData.date || !formData.time || !formData.location) {
-      alert('Please fill in all required fields');
+    if (!formData.title || !formData.date || !formData.time || !selectedLocation) {
+      alert('Please fill in all required fields and select a location on the map');
       return;
     }
 
     const eventData = {
       ...formData,
-      location: selectedLocation || { lat: 52.520008, lng: 13.404954 }, // Default to Berlin
-      city: formData.location,
+      location: selectedLocation,
+      city: formData.location || selectedLocation.address || 'Unknown',
       startTime: new Date(`${formData.date}T${formData.time}`).toISOString(),
       endTime: new Date(`${formData.date}T${formData.time}`).toISOString(), // Add 2 hours
     };
@@ -132,10 +141,10 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
               </div>
             </div>
 
-            {/* Location */}
+            {/* Event Location */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Location *
+                Event Location *
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -144,22 +153,19 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
                   name="location"
                   value={formData.location}
                   onChange={handleInputChange}
-                  placeholder="Search or click on map..."
+                  placeholder="Start typing city name..."
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   required
                 />
               </div>
-              <p className="text-sm text-gray-500 mt-1">Click on the map below to set exact location</p>
+              <p className="text-sm text-gray-500 mt-1">Or click on the map below to set exact location</p>
             </div>
 
-            {/* Mini Map Preview */}
-            <div className="h-48 bg-gray-100 rounded-xl flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <MapPin className="w-8 h-8 mx-auto mb-2" />
-                <p className="text-sm">Map preview will appear here</p>
-                <p className="text-xs">Click to set location</p>
-              </div>
-            </div>
+            {/* Interactive Map */}
+            <LocationPicker 
+              onLocationSelect={handleLocationSelect}
+              height="300px"
+            />
 
             {/* Attendee Limit */}
             <div>

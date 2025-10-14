@@ -2,13 +2,13 @@
 
 import { useEffect, useState, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { MapPin, Users, Clock, Calendar, Plus, User, Crown, Trophy, Shield } from 'lucide-react';
+import { MapPin, Users, Clock, Calendar, Plus, User, Crown, Trophy } from 'lucide-react';
 import JoinEventModal from '../events/JoinEventModal';
 import EventChat from '../chat/EventChat';
 import EventDashboard from '../events/EventDashboard';
 import Leaderboard from '../leaderboard/Leaderboard';
-import AdminLogin from '../admin/AdminLogin';
 import AdminDashboard from '../admin/AdminDashboard';
+import AdminLogin from '../admin/AdminLogin';
 import { MapLoadingSkeleton } from '../ui/LoadingSkeleton';
 import ThemeToggle from '../ui/ThemeToggle';
 import LanguageToggle from '../ui/LanguageToggle';
@@ -35,7 +35,7 @@ interface Event {
   startTime: string;
   attendeeLimit: number;
   attendeeCount: number;
-  organizer?: { name: string; avatar?: string };
+  organizer?: { id: string; name: string; avatar?: string };
   createdAt?: string;
   isHot?: boolean;
 }
@@ -137,44 +137,8 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
       setEvents(mapped);
     } catch (error) {
       console.error('Failed to fetch events:', error);
-      // fallback to mock data with hot events
-      const now = new Date();
-      const mockEvents: Event[] = [
-        { 
-          id: '1', 
-          title: 'Schoko-Pudding Sonntag', 
-          location: { lat: 52.520008, lng: 13.404954 }, 
-          city: 'Berlin', 
-          startTime: '2025-10-06T15:00:00Z', 
-          attendeeLimit: 15, 
-          attendeeCount: 8,
-          createdAt: new Date(now.getTime() - 5 * 60 * 1000).toISOString(), // 5 minutes ago - HOT!
-          isHot: true
-        },
-        { 
-          id: '2', 
-          title: 'Vanille Vibes', 
-          location: { lat: 48.1351, lng: 11.5820 }, 
-          city: 'Munich', 
-          startTime: '2025-10-07T14:00:00Z', 
-          attendeeLimit: 12, 
-          attendeeCount: 5,
-          createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-          isHot: false
-        },
-        { 
-          id: '3', 
-          title: 'Caramel Connect', 
-          location: { lat: 50.1109, lng: 8.6821 }, 
-          city: 'Frankfurt', 
-          startTime: '2025-10-08T16:00:00Z', 
-          attendeeLimit: 20, 
-          attendeeCount: 12,
-          createdAt: new Date(now.getTime() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
-          isHot: false
-        },
-      ];
-      setEvents(mockEvents);
+      // Set empty events array on error
+      setEvents([]);
     } finally {
       setIsLoading(false);
     }
@@ -287,19 +251,8 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
               </div>
             </div>
             
-            {/* Right controls: radius + location + create/login */}
+            {/* Right controls: location + create/login */}
             <div className="flex items-center gap-3">
-              <select
-                value={radiusKm}
-                onChange={(e) => setRadiusKm(parseInt(e.target.value))}
-                className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm hover:border-gray-400 dark:hover:border-gray-500"
-                title="Radius"
-              >
-                {[5,10,20,30,50].map(km => (
-                  <option key={km} value={km}>{km} {t('radius.km')}</option>
-                ))}
-              </select>
-
               <button
                 onClick={requestLocation}
                 className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors hover:scale-105 active:scale-95"
@@ -323,14 +276,6 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
               >
                 <Plus className="w-4 h-4" />
                 <span>{t('create.event')}</span>
-              </button>
-
-              <button
-                onClick={() => setShowAdminLogin(true)}
-                className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors hover:scale-105 active:scale-95"
-                title="Admin access"
-              >
-                <Shield className="w-4 h-4" />
               </button>
 
               <ThemeToggle />
