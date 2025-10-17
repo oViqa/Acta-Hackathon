@@ -5,15 +5,27 @@ import dynamic from 'next/dynamic';
 import { useAuthStore } from '@/store/authStore';
 import { LoginDialog } from '@/components/auth/LoginDialog';
 import { CreateEventDialog } from '@/components/events/CreateEventDialog';
+import WelcomePage from '@/components/WelcomePage';
 import { Button } from '@/components/ui/button';
 import { Plus, User, Menu } from 'lucide-react';
 
-import FunctionalMapView from '@/components/map/FunctionalMapView';
+const MapView = dynamic(() => import('@/components/map/MapView'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
+        <p className="text-lg font-medium text-gray-600">Loading pudding map...</p>
+      </div>
+    </div>
+  )
+});
 
 export default function Home() {
   const { user, isLoading } = useAuthStore();
   const [showLogin, setShowLogin] = useState(false);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const handleCreateEvent = () => {
     if (!user) {
@@ -21,6 +33,15 @@ export default function Home() {
     } else {
       setShowCreateEvent(true);
     }
+  };
+
+  const handleSignIn = () => {
+    setShowWelcome(false);
+    setShowLogin(true);
+  };
+
+  const handleSkipToDemo = () => {
+    setShowWelcome(false);
   };
 
   if (isLoading) {
@@ -34,16 +55,22 @@ export default function Home() {
     );
   }
 
+  // Show welcome page as overlay on map
   return (
-      <main className="relative w-full h-screen overflow-hidden">
-        {/* Map - Full screen, no header */}
-        <div className="w-full h-full">
-          <FunctionalMapView onCreateEvent={handleCreateEvent} onLogin={() => setShowLogin(true)} user={user} />
-        </div>
+    <main className="relative w-full h-screen overflow-hidden">
+      {/* Map - Always in background */}
+      <div className="w-full h-full">
+        <MapView onCreateEvent={handleCreateEvent} onLogin={() => setShowLogin(true)} user={user} />
+      </div>
 
-        {/* Dialogs */}
-        <LoginDialog open={showLogin} onOpenChange={setShowLogin} />
-        <CreateEventDialog open={showCreateEvent} onOpenChange={setShowCreateEvent} />
-      </main>
+      {/* Welcome Page Overlay */}
+      {showWelcome && (
+        <WelcomePage onSignIn={handleSignIn} onSkipToDemo={handleSkipToDemo} />
+      )}
+
+      {/* Dialogs */}
+      <LoginDialog open={showLogin} onOpenChange={setShowLogin} />
+      <CreateEventDialog open={showCreateEvent} onOpenChange={setShowCreateEvent} />
+    </main>
   );
 }

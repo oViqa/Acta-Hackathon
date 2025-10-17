@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Send, Image as ImageIcon, Smile, MoreVertical, Users, Clock } from 'lucide-react';
+import Image from 'next/image';
 
 interface Message {
   id: string;
@@ -171,9 +172,11 @@ export default function EventChat({ eventId, isOpen, onClose, event }: EventChat
               <div className={`flex space-x-2 max-w-[80%] ${message.isOwn ? 'flex-row-reverse space-x-reverse' : ''}`}>
                 {/* Avatar */}
                 <div className="flex-shrink-0">
-                  <img
-                    src={message.userAvatar}
+                  <Image
+                    src={message.userAvatar || '/images/default-avatar.png'}
                     alt={message.userName}
+                    width={32}
+                    height={32}
                     className="w-8 h-8 rounded-full object-cover"
                   />
                 </div>

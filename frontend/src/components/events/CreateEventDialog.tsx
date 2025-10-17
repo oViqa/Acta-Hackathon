@@ -7,7 +7,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import api, { handleApiError } from '@/lib/api';
+import { eventsAPI, handleApiError } from '@/lib/api';
+import dynamic from 'next/dynamic';
+
+const LocationPicker = dynamic(() => import('@/components/map/LocationPicker'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[300px] bg-gray-100 rounded-lg flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-2"></div>
+        <p className="text-sm text-gray-600">Loading map...</p>
+      </div>
+    </div>
+  )
+});
 
 interface CreateEventDialogProps {
   open: boolean;
@@ -19,8 +32,7 @@ export function CreateEventDialog({ open, onOpenChange }: CreateEventDialogProps
   const [description, setDescription] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
-  const [lat, setLat] = useState('52.520008');
-  const [lng, setLng] = useState('13.404954');
+  const [location, setLocation] = useState({ lat: 52.520008, lng: 13.404954 });
   const [startDate, setStartDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [duration, setDuration] = useState('2');
@@ -36,19 +48,18 @@ export function CreateEventDialog({ open, onOpenChange }: CreateEventDialogProps
       const startDateTime = new Date(`${startDate}T${startTime}`);
       const endDateTime = new Date(startDateTime.getTime() + parseInt(duration) * 60 * 60 * 1000);
 
-      await api.post('/events', {
+      const eventData = {
         title,
         description,
-        location: {
-          lat: parseFloat(lat),
-          lng: parseFloat(lng)
-        },
+        location,
         city,
         state,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
         attendeeLimit: parseInt(attendeeLimit)
-      });
+      };
+
+      await eventsAPI.createEvent(eventData);
 
       toast({
         title: 'Event created!',
@@ -127,31 +138,13 @@ export function CreateEventDialog({ open, onOpenChange }: CreateEventDialogProps
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="lat">Latitude *</Label>
-              <Input
-                id="lat"
-                type="number"
-                step="any"
-                placeholder="52.520008"
-                value={lat}
-                onChange={(e) => setLat(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lng">Longitude *</Label>
-              <Input
-                id="lng"
-                type="number"
-                step="any"
-                placeholder="13.404954"
-                value={lng}
-                onChange={(e) => setLng(e.target.value)}
-                required
-              />
-            </div>
+          <div className="space-y-2">
+            <Label>Event Location *</Label>
+            <LocationPicker
+              onLocationSelect={(selectedLocation) => setLocation(selectedLocation)}
+              initialLocation={location}
+              height="300px"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

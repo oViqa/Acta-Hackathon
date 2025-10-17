@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, Camera, Upload, Image, FileText } from 'lucide-react';
+import NextImage from 'next/image';
 
 interface JoinEventModalProps {
   isOpen: boolean;
@@ -158,9 +159,11 @@ export default function JoinEventModal({ isOpen, onClose, event, onSubmit }: Joi
                   {formData.puddingPhoto ? (
                     <div className="space-y-3">
                       <div className="relative inline-block">
-                        <img
+                        <NextImage
                           src={URL.createObjectURL(formData.puddingPhoto)}
                           alt="Pudding preview"
+                          width={128}
+                          height={128}
                           className="w-32 h-32 mx-auto rounded-xl object-cover shadow-lg"
                         />
                         <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
@@ -204,7 +207,7 @@ export default function JoinEventModal({ isOpen, onClose, event, onSubmit }: Joi
                   value={formData.puddingName}
                   onChange={handleInputChange}
                   placeholder="e.g., Vanilla Dream, Chocolate Delight"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-gray-100"
                 />
               </div>
             </div>
@@ -220,7 +223,7 @@ export default function JoinEventModal({ isOpen, onClose, event, onSubmit }: Joi
                 onChange={handleInputChange}
                 placeholder="Tell us about your pudding... homemade recipe, special ingredients, etc."
                 rows={3}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-gray-900 dark:text-gray-100"
               />
             </div>
 
