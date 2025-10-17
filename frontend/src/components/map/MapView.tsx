@@ -2,13 +2,13 @@
 
 import { useEffect, useState, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { MapPin, Users, Clock, Calendar, Plus, User, Crown, Trophy } from 'lucide-react';
+import { MapPin, Users, Clock, Calendar, Plus, User, Crown, Trophy, Shield } from 'lucide-react';
 import JoinEventModal from '../events/JoinEventModal';
 import EventChat from '../chat/EventChat';
 import EventDashboard from '../events/EventDashboard';
 import Leaderboard from '../leaderboard/Leaderboard';
-import AdminDashboard from '../admin/AdminDashboard';
 import AdminLogin from '../admin/AdminLogin';
+import AdminDashboard from '../admin/AdminDashboard';
 import { MapLoadingSkeleton } from '../ui/LoadingSkeleton';
 import ThemeToggle from '../ui/ThemeToggle';
 import LanguageToggle from '../ui/LanguageToggle';
@@ -17,7 +17,6 @@ import LocationCircle from './LocationCircle';
 import { eventsAPI } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 import { useTranslation } from '@/hooks/useTranslation';
-import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
 // Dynamically import Leaflet components to avoid SSR issues
@@ -137,8 +136,44 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
       setEvents(mapped);
     } catch (error) {
       console.error('Failed to fetch events:', error);
-      // Set empty events array on error
-      setEvents([]);
+      // fallback to mock data with hot events
+      const now = new Date();
+      const mockEvents: Event[] = [
+        { 
+          id: '1', 
+          title: 'Schoko-Pudding Sonntag', 
+          location: { lat: 52.520008, lng: 13.404954 }, 
+          city: 'Berlin', 
+          startTime: '2025-10-06T15:00:00Z', 
+          attendeeLimit: 15, 
+          attendeeCount: 8,
+          createdAt: new Date(now.getTime() - 5 * 60 * 1000).toISOString(), // 5 minutes ago - HOT!
+          isHot: true
+        },
+        { 
+          id: '2', 
+          title: 'Vanille Vibes', 
+          location: { lat: 48.1351, lng: 11.5820 }, 
+          city: 'Munich', 
+          startTime: '2025-10-07T14:00:00Z', 
+          attendeeLimit: 12, 
+          attendeeCount: 5,
+          createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+          isHot: false
+        },
+        { 
+          id: '3', 
+          title: 'Caramel Connect', 
+          location: { lat: 50.1109, lng: 8.6821 }, 
+          city: 'Frankfurt', 
+          startTime: '2025-10-08T16:00:00Z', 
+          attendeeLimit: 20, 
+          attendeeCount: 12,
+          createdAt: new Date(now.getTime() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
+          isHot: false
+        },
+      ];
+      setEvents(mockEvents);
     } finally {
       setIsLoading(false);
     }
@@ -150,37 +185,39 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // TODO: Re-enable when location feature is complete
   // refetch when userLocation or radius changes
-  useEffect(() => {
-    if (userLocation) {
-      fetchEvents({ lat: userLocation.lat, lng: userLocation.lng, radiusKm });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(userLocation), radiusKm]);
+  // useEffect(() => {
+  //   if (userLocation) {
+  //     fetchEvents({ lat: userLocation.lat, lng: userLocation.lng, radiusKm });
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [JSON.stringify(userLocation), radiusKm]);
 
-  const requestLocation = () => {
-    if (!user) {
-      toast({ title: 'Login required', description: 'Please login to use location-based search.' });
-      onLogin();
-      return;
-    }
-    if (!('geolocation' in navigator)) {
-      toast({ title: 'Geolocation not supported', description: 'Your browser does not support geolocation.', variant: 'destructive' });
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setUserLocation({ lat: latitude, lng: longitude });
-        toast({ title: 'Location set', description: 'Using your current location.' });
-      },
-      (err) => {
-        console.error(err);
-        toast({ title: 'Permission denied', description: 'Cannot access your location.', variant: 'destructive' });
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  };
+  // TODO: Re-enable when location feature is complete
+  // const requestLocation = () => {
+  //   if (!user) {
+  //     toast({ title: 'Login required', description: 'Please login to use location-based search.' });
+  //     onLogin();
+  //     return;
+  //   }
+  //   if (!('geolocation' in navigator)) {
+  //     toast({ title: 'Geolocation not supported', description: 'Your browser does not support geolocation.', variant: 'destructive' });
+  //     return;
+  //   }
+  //   navigator.geolocation.getCurrentPosition(
+  //     (pos) => {
+  //       const { latitude, longitude } = pos.coords;
+  //       setUserLocation({ lat: latitude, lng: longitude });
+  //       toast({ title: 'Location set', description: 'Using your current location.' });
+  //     },
+  //     (err) => {
+  //       console.error(err);
+  //       toast({ title: 'Permission denied', description: 'Cannot access your location.', variant: 'destructive' });
+  //     },
+  //     { enableHighAccuracy: true, timeout: 10000 }
+  //   );
+  // };
 
   const handleJoinEventSubmit = (joinData: any) => {
     console.log('Joining event:', joinData);
@@ -197,8 +234,6 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
     setSelectedEventForDashboard(selectedEvent);
     setShowEventDashboard(true);
   };
-
-  // Removed surpriseMe function as requested
 
   const handleMarkerClick = (event: Event) => {
     setSelectedEvent(event);
@@ -251,15 +286,28 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
               </div>
             </div>
             
-            {/* Right controls: location + create/login */}
+            {/* Right controls: create/login */}
             <div className="flex items-center gap-3">
-              <button
+              {/* TODO: Re-enable radius selector when location feature is complete */}
+              {/* <select
+                value={radiusKm}
+                onChange={(e) => setRadiusKm(parseInt(e.target.value))}
+                className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm hover:border-gray-400 dark:hover:border-gray-500"
+                title="Radius"
+              >
+                {[5,10,20,30,50].map(km => (
+                  <option key={km} value={km}>{km} {t('radius.km')}</option>
+                ))}
+              </select> */}
+
+              {/* TODO: Re-enable location feature when complete */}
+              {/* <button
                 onClick={requestLocation}
                 className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors hover:scale-105 active:scale-95"
                 title={t('use.location')}
               >
                 {t('use.location')}
-              </button>
+              </button> */}
 
               <button
                 onClick={() => setShowLeaderboard(true)}
@@ -277,6 +325,15 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
                 <Plus className="w-4 h-4" />
                 <span>{t('create.event')}</span>
               </button>
+
+              {/* TODO: Re-enable admin button when needed */}
+              {/* <button
+                onClick={() => setShowAdminLogin(true)}
+                className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors hover:scale-105 active:scale-95"
+                title="Admin access"
+              >
+                <Shield className="w-4 h-4" />
+              </button> */}
 
               <ThemeToggle />
               <LanguageToggle />
@@ -313,20 +370,21 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
+          {/* TODO: Re-enable location features when complete */}
           {/* Location Circle - shows search radius */}
-          {userLocation && (
+          {/* {userLocation && (
             <LocationCircle 
               center={[userLocation.lat, userLocation.lng]} 
               radius={radiusKm * 1000} 
               color="#ff6b9d"
             />
-          )}
+          )} */}
 
-          {userLocation && (
+          {/* {userLocation && (
             <Marker position={[userLocation.lat, userLocation.lng]} icon={meIcon}>
               <Popup>You are here</Popup>
             </Marker>
-          )}
+          )} */}
 
           {events.map((event) => (
             <Marker

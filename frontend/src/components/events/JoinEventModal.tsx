@@ -204,7 +204,7 @@ export default function JoinEventModal({ isOpen, onClose, event, onSubmit }: Joi
                   value={formData.puddingName}
                   onChange={handleInputChange}
                   placeholder="e.g., Vanilla Dream, Chocolate Delight"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-gray-100"
                 />
               </div>
             </div>
@@ -220,7 +220,7 @@ export default function JoinEventModal({ isOpen, onClose, event, onSubmit }: Joi
                 onChange={handleInputChange}
                 placeholder="Tell us about your pudding... homemade recipe, special ingredients, etc."
                 rows={3}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-gray-900 dark:text-gray-100"
               />
             </div>
 

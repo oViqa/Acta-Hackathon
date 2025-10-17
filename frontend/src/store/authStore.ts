@@ -28,8 +28,21 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (email, password) => {
     set({ isLoading: true });
     try {
-      const response = await api.post('/auth/login', { email, password });
-      const { user, token } = response.data;
+      // Try Fetch API instead of Axios
+      const response = await fetch('http://localhost:3001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      const { user, token } = data;
       localStorage.setItem('token', token);
       set({ user, token, isAuthenticated: true, isLoading: false });
     } catch (error) {
@@ -41,8 +54,21 @@ export const useAuthStore = create<AuthState>((set) => ({
   register: async (email, password, name) => {
     set({ isLoading: true });
     try {
-      const response = await api.post('/auth/register', { email, password, name });
-      const { user, token } = response.data;
+      // Try Fetch API instead of Axios
+      const response = await fetch('http://localhost:3001/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, name })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      const { user, token } = data;
       localStorage.setItem('token', token);
       set({ user, token, isAuthenticated: true, isLoading: false });
     } catch (error) {

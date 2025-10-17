@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { getDb } from '../config/database';
 import { isInGermany } from '../utils/geo';
 import { ObjectId } from 'mongodb';
-import { authenticate, AuthRequest } from '../middleware/auth';
+import { authenticate, AuthRequest, requireAdmin } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -27,59 +27,8 @@ router.get('/', async (req, res, next) => {
     const db = getDb();
     
     if (!db) {
-      // Return mock events when DB is not available
-      const mockEvents = [
-        {
-          id: 'mock-1',
-          title: 'Schoko-Pudding Sonntag',
-          description: 'Join us for the best chocolate pudding in Berlin!',
-          location: { lat: 52.520008, lng: 13.404954 },
-          city: 'Berlin',
-          state: 'Berlin',
-          startTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-          endTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000).toISOString(),
-          attendeeLimit: 15,
-          attendeeCount: 8,
-          status: 'UPCOMING',
-          organizer: { id: 'mock-organizer' },
-          createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago - HOT!
-          isHot: true
-        },
-        {
-          id: 'mock-2',
-          title: 'Vanille Vibes',
-          description: 'Smooth vanilla pudding meetup in Munich',
-          location: { lat: 48.1351, lng: 11.5820 },
-          city: 'Munich',
-          state: 'Bavaria',
-          startTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-          endTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(),
-          attendeeLimit: 12,
-          attendeeCount: 5,
-          status: 'UPCOMING',
-          organizer: { id: 'mock-organizer-2' },
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-          isHot: false
-        },
-        {
-          id: 'mock-3',
-          title: 'Caramel Connect',
-          description: 'Sweet caramel pudding gathering in Frankfurt',
-          location: { lat: 50.1109, lng: 8.6821 },
-          city: 'Frankfurt',
-          state: 'Hesse',
-          startTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-          endTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000).toISOString(),
-          attendeeLimit: 20,
-          attendeeCount: 12,
-          status: 'UPCOMING',
-          organizer: { id: 'mock-organizer-3' },
-          createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
-          isHot: false
-        }
-      ];
-      
-      return res.json({ events: mockEvents, total: mockEvents.length });
+      // Return empty events array when DB is not available
+      return res.json({ events: [], total: 0 });
     }
     
     const eventsCol = db.collection('events');
@@ -206,7 +155,31 @@ router.post('/', authenticate, async (req: AuthRequest, res, next) => {
 
     const db = getDb();
     if (!db) {
-      return res.status(500).json({ error: 'Database not available' });
+      // Mock mode: Create event in memory
+      const mockEvent = {
+        _id: `mock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        title: data.title,
+        description: data.description,
+        location: { type: 'Point', coordinates: [data.location.lng, data.location.lat] },
+        city: data.city,
+        state: data.state,
+        address: data.address ?? null,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        attendeeLimit: data.attendeeLimit,
+        organizerId: req.userId!,
+        status: 'UPCOMING',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      // Store in mock events array (you could use a global variable or Redis for persistence)
+      console.log('🎮 Mock mode: Event created in memory');
+      
+      return res.status(201).json({ 
+        event: mockEvent,
+        message: 'Event created successfully (mock mode)'
+      });
     }
     
     const eventsCol = db.collection('events');
@@ -241,7 +214,12 @@ router.patch('/:id', authenticate, async (req: AuthRequest, res, next) => {
     const { id } = req.params as any;
     const db = getDb();
     if (!db) {
-      return res.status(500).json({ error: 'Database not available' });
+      // Mock mode: Simulate event update
+      console.log('🎮 Mock mode: Event update simulated');
+      return res.status(200).json({ 
+        event: { _id: id, ...req.body, updatedAt: new Date().toISOString() },
+        message: 'Event updated successfully (mock mode)'
+      });
     }
     
     const eventsCol = db.collection('events');
@@ -267,7 +245,12 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res, next) => {
     const { id } = req.params as any;
     const db = getDb();
     if (!db) {
-      return res.status(500).json({ error: 'Database not available' });
+      // Mock mode: Simulate event deletion
+      console.log('🎮 Mock mode: Event deletion simulated');
+      return res.status(200).json({ 
+        message: 'Event cancelled successfully (mock mode)',
+        cancelledBy: 'organizer'
+      });
     }
     
     const eventsCol = db.collection('events');
@@ -275,12 +258,24 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res, next) => {
     const ev = await eventsCol.findOne({ _id: new ObjectId(id) });
     if (!ev) return res.status(404).json({ error: 'Event not found' });
 
-    if (ev.organizerId !== req.userId) {
-      return res.status(403).json({ error: 'Only organizer can delete event' });
+    // Authorization logic: Only organizer or admin/super_admin can delete events
+    const isOrganizer = ev.organizerId === req.userId;
+    const isAdmin = req.userRole === 'admin' || req.userRole === 'super_admin';
+    
+    if (!isOrganizer && !isAdmin) {
+      return res.status(403).json({ 
+        error: 'Only event organizer or administrators can delete events',
+        required: 'organizer or admin role'
+      });
     }
 
     await eventsCol.updateOne({ _id: new ObjectId(id) }, { $set: { status: 'CANCELLED', updatedAt: new Date() } });
-    res.json({ message: 'Event cancelled successfully' });
+    
+    const actionBy = isAdmin ? 'administrator' : 'organizer';
+    res.json({ 
+      message: `Event cancelled successfully by ${actionBy}`,
+      cancelledBy: actionBy
+    });
   } catch (error) {
     next(error);
   }

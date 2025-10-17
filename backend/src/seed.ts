@@ -66,16 +66,26 @@ async function seed() {
     createdAt: new Date()
   });
 
-  const puddingDummy = await db.collection('users').insertOne({
-    email: 'puddingdummy@puddingmeetup.com',
-    passwordHash: await bcrypt.hash('dummytest', 10),
-    name: 'PuddingDummy',
-    createdAt: new Date()
-  });
+  // Create easily-testable demo user accounts with guaranteed credentials
+  const testUser1 = [
+    {
+      email: 'demo1@puddingmeetup.com',
+      password: 'demopass1',
+      name: 'DemoUser,
+    },
+  ];
 
-  console.log(`✅ Created admin: admin@puddingmeetup.com`);
-  console.log(`✅ Created admin2: admin2@puddingmeetup.com`);
-  console.log(`✅ Created puddingdummy: puddingdummy@puddingmeetup.com`);
+  const testUserIds = [];
+  for (const user of testUsers) {
+    const inserted = await db.collection('users').insertOne({
+      email: user.email,
+      passwordHash: await bcrypt.hash(user.password, 10),
+      name: user.name,
+      createdAt: new Date()
+    });
+    testUserIds.push(inserted.insertedId);
+    console.log(`✅ Created test user: ${user.email} / password: ${user.password}`);
+  }
 
   // Create test users
   const users = [admin1.insertedId, admin2.insertedId, puddingDummy.insertedId];

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Users, Clock, MapPin, MessageSquare, CheckCircle, XCircle, Clock as ClockIcon } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import ManageEventPage from './ManageEventPage';
 
 interface Event {
   id: string;
@@ -41,6 +42,7 @@ const EventDashboard: React.FC<EventDashboardProps> = ({ event, onClose, user })
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [showManageEvent, setShowManageEvent] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -151,6 +153,11 @@ const EventDashboard: React.FC<EventDashboardProps> = ({ event, onClose, user })
   const approvedCount = attendances.filter(att => att.status === 'APPROVED').length;
   const rejectedCount = attendances.filter(att => att.status === 'REJECTED').length;
 
+  // Show the new ManageEventPage if requested
+  if (showManageEvent) {
+    return <ManageEventPage />;
+  }
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
@@ -162,12 +169,20 @@ const EventDashboard: React.FC<EventDashboardProps> = ({ event, onClose, user })
               {event.city} • {new Date(event.startTime).toLocaleDateString()}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
-          >
-            ×
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowManageEvent(true)}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition text-sm font-semibold"
+            >
+              Manage Event
+            </button>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* Event Info */}

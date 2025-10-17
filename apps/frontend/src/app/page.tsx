@@ -1,7 +1,12 @@
 import { Suspense } from 'react';
-import MapView from '@/components/map/MapView';
+import dynamic from 'next/dynamic';
 import Header from '@/components/layout/Header';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+
+const MapView = dynamic(() => import('@/components/map/MapView'), {
+  ssr: false,
+  loading: () => <LoadingSpinner />
+});
 
 export default function HomePage() {
   return (

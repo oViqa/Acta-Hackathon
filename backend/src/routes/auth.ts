@@ -90,11 +90,19 @@ router.post('/simple/login', async (req, res) => {
     if (!valid) return res.status(401).json({ error: 'Invalid email or password' });
 
     const secret = process.env.JWT_SECRET || 'your-secret-key';
-    const token = jwt.sign({ userId: user._id.toString() }, secret, { expiresIn: '7d' });
+    const token = jwt.sign({ 
+      userId: user._id.toString(), 
+      userRole: user.role || 'user' 
+    }, secret, { expiresIn: '7d' });
 
     return res.json({
       message: 'Login successful',
-      user: { id: user._id.toString(), email: user.email, name: user.name },
+      user: { 
+        id: user._id.toString(), 
+        email: user.email, 
+        name: user.name,
+        role: user.role || 'user'
+      },
       token,
     });
   } catch (err) {
@@ -128,17 +136,22 @@ router.post('/register', async (req, res, next) => {
       email,
       passwordHash,
       name,
+      role: 'user', // Default role for new users
       createdAt: new Date(),
     });
 
     const secret = process.env.JWT_SECRET || 'your-secret-key';
-    const token = jwt.sign({ userId: result.insertedId.toString() }, secret, { expiresIn: '7d' });
+    const token = jwt.sign({ 
+      userId: result.insertedId.toString(),
+      userRole: 'user'
+    }, secret, { expiresIn: '7d' });
 
     res.status(201).json({
       user: {
         id: result.insertedId.toString(),
         email,
         name,
+        role: 'user',
         avatarUrl: null,
       },
       token

@@ -74,7 +74,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
       <div className="apple-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Create New Event</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Create New Event</h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 text-2xl"
@@ -86,7 +86,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Event Title */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Event Title *
               </label>
               <div className="relative">
@@ -97,7 +97,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
                   value={formData.title}
                   onChange={handleInputChange}
                   placeholder="e.g., Schoko-Pudding Sonntag"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-gray-100"
                   required
                 />
               </div>
@@ -106,7 +106,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
             {/* Date & Time */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   Date *
                 </label>
                 <div className="relative">
@@ -117,14 +117,14 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
                     value={formData.date}
                     onChange={handleInputChange}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-gray-100"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   Time *
                 </label>
                 <div className="relative">
@@ -134,7 +134,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
                     name="time"
                     value={formData.time}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-gray-100"
                     required
                   />
                 </div>
@@ -143,7 +143,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
 
             {/* Event Location */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Event Location *
               </label>
               <div className="relative">
@@ -154,11 +154,11 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
                   value={formData.location}
                   onChange={handleInputChange}
                   placeholder="Start typing city name..."
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-gray-100"
                   required
                 />
               </div>
-              <p className="text-sm text-gray-500 mt-1">Or click on the map below to set exact location</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Or click on the map below to set exact location</p>
             </div>
 
             {/* Interactive Map */}
@@ -169,7 +169,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
 
             {/* Attendee Limit */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Attendee Limit *
               </label>
               <div className="relative">
@@ -178,7 +178,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
                   name="attendeeLimit"
                   value={formData.attendeeLimit}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none text-gray-900 dark:text-gray-100"
                   required
                 >
                   <option value={5}>5 people</option>
@@ -195,7 +195,7 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Description (optional)
               </label>
               <textarea
@@ -204,13 +204,13 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
                 onChange={handleInputChange}
                 placeholder="Tell people what to expect at your pudding meetup..."
                 rows={3}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-gray-900 dark:text-gray-100"
               />
             </div>
 
             {/* Your Pudding Photo */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Your Pudding Photo (optional)
               </label>
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-primary-400 transition-colors">
@@ -229,14 +229,14 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
                         alt="Pudding preview"
                         className="w-20 h-20 mx-auto rounded-lg object-cover"
                       />
-                      <p className="text-sm text-gray-600">{formData.puddingPhoto.name}</p>
-                      <p className="text-xs text-gray-500">Click to change</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{formData.puddingPhoto.name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Click to change</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
                       <Camera className="w-8 h-8 mx-auto text-gray-400" />
-                      <p className="text-sm text-gray-600">Upload a photo of your pudding</p>
-                      <p className="text-xs text-gray-500">JPG, PNG up to 5MB</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Upload a photo of your pudding</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">JPG, PNG up to 5MB</p>
                     </div>
                   )}
                 </label>
