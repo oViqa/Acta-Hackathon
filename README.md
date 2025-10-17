@@ -133,15 +133,7 @@ The app works perfectly **without a database** using mock data. For full functio
 - Sample events with realistic data
 - All features work except persistence
 
-## 🔧 Environment Variables
-
-### Required for Production
-```
-NEXT_PUBLIC_API_URL=https://your-domain.vercel.app
-JWT_SECRET=your-super-secret-jwt-key
-```
-
-### Optional
+### Environment Variables
 ```
 MONGODB_URI=mongodb+srv://...
 MONGODB_DB=puddingmeetup
