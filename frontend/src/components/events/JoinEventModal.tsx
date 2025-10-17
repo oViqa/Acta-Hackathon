@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, Camera, Upload, Image, FileText } from 'lucide-react';
+import NextImage from 'next/image';
 
 interface JoinEventModalProps {
   isOpen: boolean;
@@ -158,9 +159,11 @@ export default function JoinEventModal({ isOpen, onClose, event, onSubmit }: Joi
                   {formData.puddingPhoto ? (
                     <div className="space-y-3">
                       <div className="relative inline-block">
-                        <img
+                        <NextImage
                           src={URL.createObjectURL(formData.puddingPhoto)}
                           alt="Pudding preview"
+                          width={128}
+                          height={128}
                           className="w-32 h-32 mx-auto rounded-xl object-cover shadow-lg"
                         />
                         <div className="absolute inset-0 bg-black/20 rounded-xl flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">

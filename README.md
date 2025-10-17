@@ -1,6 +1,6 @@
 # 🍮 Pudding mit Gabel - Find Your Pudding People
 
-A modern, interactive meetup platform for pudding enthusiasts around the World! Built with Next.js, TypeScript, and MongoDB.
+A modern, interactive meetup platform for pudding enthusiasts around the World! Built with Next.js, TypeScript, and MongoDB with automatic fallback to mock data.
 
 ## ✨ Features
 
@@ -58,10 +58,12 @@ npm run dev
 
 ### Access Points
 - **Frontend**: http://localhost:3002
-- **Backend API**: http://localhost:3001
-- **Admin Login**: 
+- **MongoDB Connected**: ✅ Real database with existing events and users
+- **Test Accounts** (Mock Mode):
   - `admin2@puddingmeetup.com` / `adminpudding2`
   - `puddingdummy@puddingmeetup.com` / `dummytest`
+  - `test@example.com` / `testpass`
+- **Real Database**: Register new accounts or use existing ones in MongoDB
 
 ## 🏗️ Project Structure
 
@@ -78,13 +80,7 @@ npm run dev
 │   │   │   └── ui/          # UI components
 │   │   ├── store/           # Zustand stores
 │   │   ├── hooks/           # Custom hooks
-│   │   └── lib/             # Utilities & API
-├── backend/
-│   ├── src/                 # Backend source
-│   │   ├── routes/          # API routes
-│   │   ├── config/          # Database config
-│   │   └── middleware/      # Auth & error handling
-│   └── api/                 # Vercel serverless functions
+│   │   └── lib/             # Utilities
 ├── vercel.json              # Vercel configuration
 └── deploy.sh                # Deployment script
 ```
@@ -118,35 +114,34 @@ npm run dev
 - See live rankings with points
 - Animated badges for top users
 
-## 🗄️ Database (Optional)
+## 🗄️ Database & Mock Data
 
-The app works perfectly **without a database** using mock data. For full functionality:
+The app supports **both MongoDB and mock data** for maximum flexibility:
 
-### MongoDB Atlas Setup
-1. Create account at [mongodb.com/atlas](https://mongodb.com/atlas)
-2. Create a cluster
-3. Get connection string
-4. Set `MONGODB_URI` in environment variables
+### With MongoDB (Recommended for Production)
+- **Full persistence** - all data is saved and retrieved from database
+- **Real user accounts** with secure authentication
+- **Event management** with real-time updates
+- **Complete functionality** including chat, attendance, etc.
 
-### Without MongoDB
-- App runs in **mock mode**
-- Sample events with realistic data
-- All features work except persistence
+### Without MongoDB (Mock Mode)
+- **No database required** - everything works out of the box
+- **Sample events** with realistic data across German cities
+- **Mock authentication** with predefined test accounts
+- **All features work** including admin dashboard and leaderboard
+- **Perfect for demos** and quick deployment
 
 ## 🔧 Environment Variables
 
-### Required for Production
+### For MongoDB Setup (Optional)
 ```
-NEXT_PUBLIC_API_URL=https://your-domain.vercel.app
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/puddingmeetup
+MONGODB_DB=puddingmeetup
 JWT_SECRET=your-super-secret-jwt-key
 ```
 
-### Optional
-```
-MONGODB_URI=mongodb+srv://...
-MONGODB_DB=puddingmeetup
-NODE_ENV=production
-```
+### Without Environment Variables
+The app automatically falls back to mock data mode if no MongoDB URI is provided.
 
 ## 🚀 Deployment Options
 
@@ -154,13 +149,13 @@ NODE_ENV=production
 - **Zero config** deployment
 - **Automatic HTTPS**
 - **Global CDN**
-- **Serverless functions**
+- **Built-in API routes** for database operations
 
 ### Other Platforms
-- **Netlify**: Use Netlify Functions
+- **Netlify**: Static site deployment
+- **GitHub Pages**: Free hosting
 - **Railway**: Full-stack deployment
-- **Heroku**: Traditional hosting
-- **AWS**: Elastic Beanstalk
+- **AWS**: S3 + CloudFront
 
 ## 🐛 Troubleshooting
 
@@ -168,18 +163,20 @@ NODE_ENV=production
 
 1. **Map not loading**
    - Check Leaflet CSS import
-   - Verify API endpoints
+   - Verify browser console for errors
 
 2. **Admin login fails**
    - Use exact credentials from README
+   - Try: `admin2@puddingmeetup.com` / `adminpudding2`
 
 3. **Build fails**
    - Ensure all dependencies installed
    - Check TypeScript errors
 
-4. **API errors**
-   - Verify environment variables
-   - Check CORS settings
+4. **Database connection issues**
+   - App automatically falls back to mock data
+   - Check MongoDB URI in environment variables
+   - Verify network connectivity to MongoDB Atlas
 
 ### Getting Help
 - Check the [Issues](https://github.com/oViqa/global-hackathon-v1/issues) page

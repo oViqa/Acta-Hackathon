@@ -9,21 +9,19 @@ if ! npx vercel whoami &> /dev/null; then
     exit 1
 fi
 
-# Deploy to Vercel
-echo "📦 Deploying..."
+# Deploy to Vercel from frontend directory
+echo "📦 Deploying from frontend directory..."
+cd frontend
 npx vercel --prod
 
 echo "✅ Deployment complete!"
 echo ""
 echo "🔧 Next steps:"
-echo "1. Set environment variables in Vercel dashboard:"
-echo "   - NEXT_PUBLIC_API_URL = https://your-project.vercel.app"
-echo "   - JWT_SECRET = your-secret-key"
-echo "   - MONGODB_URI = mongodb+srv://... (optional)"
-echo ""
-echo "2. Test your deployment:"
+echo "1. Test your deployment:"
 echo "   - Visit your Vercel URL"
-echo "   - Try admin login: admin/adminpudding"
-echo "   - Test all features: leaderboard, surprise me, etc."
+echo "   - Try admin login: admin2@puddingmeetup.com / adminpudding2"
+echo "   - Test all features: leaderboard, event creation, etc."
+echo ""
+echo "2. The app now runs on mock data - no backend required!"
 echo ""
 echo "🎉 Your Pudding mit Gabel app is now live!"

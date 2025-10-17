@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import api, { handleApiError } from '@/lib/api';
+import { eventsAPI, handleApiError } from '@/lib/api';
 
 interface CreateEventDialogProps {
   open: boolean;
@@ -36,7 +36,7 @@ export function CreateEventDialog({ open, onOpenChange }: CreateEventDialogProps
       const startDateTime = new Date(`${startDate}T${startTime}`);
       const endDateTime = new Date(startDateTime.getTime() + parseInt(duration) * 60 * 60 * 1000);
 
-      await api.post('/events', {
+      const eventData = {
         title,
         description,
         location: {
@@ -48,7 +48,9 @@ export function CreateEventDialog({ open, onOpenChange }: CreateEventDialogProps
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
         attendeeLimit: parseInt(attendeeLimit)
-      });
+      };
+
+      await eventsAPI.createEvent(eventData);
 
       toast({
         title: 'Event created!',

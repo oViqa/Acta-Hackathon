@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import api from '@/lib/api';
+import { authAPI } from '@/lib/api';
 
 interface User {
   id: string;
@@ -28,21 +28,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (email, password) => {
     set({ isLoading: true });
     try {
-      // Try Fetch API instead of Axios
-      const response = await fetch('http://localhost:3001/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      const { user, token } = data;
+      const response = await authAPI.login({ email, password });
+      const { user, token } = response.data;
       localStorage.setItem('token', token);
       set({ user, token, isAuthenticated: true, isLoading: false });
     } catch (error) {
@@ -54,21 +41,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   register: async (email, password, name) => {
     set({ isLoading: true });
     try {
-      // Try Fetch API instead of Axios
-      const response = await fetch('http://localhost:3001/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, name })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      const { user, token } = data;
+      const response = await authAPI.register({ name, email, password });
+      const { user, token } = response.data;
       localStorage.setItem('token', token);
       set({ user, token, isAuthenticated: true, isLoading: false });
     } catch (error) {
@@ -90,7 +64,21 @@ export const useAuthStore = create<AuthState>((set) => ({
         return;
       }
 
-      const response = await api.get('/auth/me');
+      // For mock tokens, validate locally
+      if (token.startsWith('mock-')) {
+        const userId = token.replace('mock-', '').replace('-token', '');
+        const user = { 
+          id: userId, 
+          email: 'user@example.com', 
+          name: 'Mock User',
+          role: userId.includes('admin') ? 'admin' : 'user'
+        };
+        set({ user, token, isAuthenticated: true, isLoading: false });
+        return;
+      }
+
+      // For real tokens, validate with API
+      const response = await authAPI.getMe();
       set({ user: response.data, token, isAuthenticated: true, isLoading: false });
     } catch (error) {
       localStorage.removeItem('token');

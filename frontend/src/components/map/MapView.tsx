@@ -14,9 +14,9 @@ import ThemeToggle from '../ui/ThemeToggle';
 import LanguageToggle from '../ui/LanguageToggle';
 import FloatingActionButton from '../ui/FloatingActionButton';
 import LocationCircle from './LocationCircle';
-import { eventsAPI } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
 import { useTranslation } from '@/hooks/useTranslation';
+import { eventsAPI } from '@/lib/api';
 import L from 'leaflet';
 
 // Dynamically import Leaflet components to avoid SSR issues
@@ -106,24 +106,31 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
   const fetchEvents = async (opts?: { lat?: number; lng?: number; radiusKm?: number }) => {
     try {
       setIsLoading(true);
+      
       const params: any = {};
       if (opts?.lat && opts?.lng) {
         params.lat = opts.lat;
         params.lng = opts.lng;
         params.radius = (opts.radiusKm ?? radiusKm) * 1000; // meters
       }
+      
       const response = await eventsAPI.getEvents(params);
       const payload = response.data;
       const list = (payload.events ?? payload) as any[];
+      
       const mapped: Event[] = list.map((e: any) => {
-        const createdAt = e.createdAt ? new Date(e.createdAt) : new Date(Date.now() - Math.random() * 86400000); // Random within last 24h for demo
+        const createdAt = e.createdAt ? new Date(e.createdAt) : new Date(Date.now() - Math.random() * 86400000);
         const isHot = (Date.now() - createdAt.getTime()) < 10 * 60 * 1000; // Hot if created within last 10 minutes
         
         return {
-          id: e.id,
+          id: e.id || e._id,
           title: e.title,
           description: e.description,
-          location: e.location ?? { lat: e.location?.lat ?? e.location?.coordinates?.[1], lng: e.location?.lng ?? e.location?.coordinates?.[0] },
+          location: e.location?.coordinates ? 
+            { lat: e.location.coordinates[1], lng: e.location.coordinates[0] } : 
+            e.location?.lat && e.location?.lng ?
+            { lat: e.location.lat, lng: e.location.lng } :
+            { lat: 52.520008, lng: 13.404954 }, // Default to Berlin if no valid location
           city: e.city,
           startTime: e.startTime,
           attendeeLimit: e.attendeeLimit,
@@ -133,6 +140,7 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
           isHot,
         };
       });
+      
       setEvents(mapped);
     } catch (error) {
       console.error('Failed to fetch events:', error);
@@ -170,6 +178,28 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
           attendeeLimit: 20, 
           attendeeCount: 12,
           createdAt: new Date(now.getTime() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
+          isHot: false
+        },
+        { 
+          id: '4', 
+          title: 'Chocolate Heaven', 
+          location: { lat: 53.5511, lng: 9.9937 }, 
+          city: 'Hamburg', 
+          startTime: '2025-10-09T18:00:00Z', 
+          attendeeLimit: 25, 
+          attendeeCount: 18,
+          createdAt: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+          isHot: false
+        },
+        { 
+          id: '5', 
+          title: 'Pudding Paradise', 
+          location: { lat: 51.2277, lng: 6.7735 }, 
+          city: 'Düsseldorf', 
+          startTime: '2025-10-10T16:30:00Z', 
+          attendeeLimit: 18, 
+          attendeeCount: 10,
+          createdAt: new Date(now.getTime() - 15 * 60 * 1000).toISOString(), // 15 minutes ago
           isHot: false
         },
       ];
@@ -386,7 +416,13 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
             </Marker>
           )} */}
 
-          {events.map((event) => (
+          {events.filter(event => 
+            event.location && 
+            typeof event.location.lat === 'number' && 
+            typeof event.location.lng === 'number' &&
+            !isNaN(event.location.lat) && 
+            !isNaN(event.location.lng)
+          ).map((event) => (
             <Marker
               key={event.id}
               position={[event.location.lat, event.location.lng]}

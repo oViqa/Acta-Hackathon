@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, MapPin, Calendar, Clock, Users, FileText, Camera, Upload } from 'lucide-react';
+import Image from 'next/image';
 import LocationPicker from '../map/LocationPicker';
 
 interface CreateEventModalProps {
@@ -224,9 +225,11 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
                 <label htmlFor="pudding-photo" className="cursor-pointer">
                   {formData.puddingPhoto ? (
                     <div className="space-y-2">
-                      <img
+                      <Image
                         src={URL.createObjectURL(formData.puddingPhoto)}
                         alt="Pudding preview"
+                        width={80}
+                        height={80}
                         className="w-20 h-20 mx-auto rounded-lg object-cover"
                       />
                       <p className="text-sm text-gray-600 dark:text-gray-300">{formData.puddingPhoto.name}</p>

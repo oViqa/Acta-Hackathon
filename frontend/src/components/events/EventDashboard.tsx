@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Users, Clock, MapPin, MessageSquare, CheckCircle, XCircle, Clock as ClockIcon } from 'lucide-react';
+import Image from 'next/image';
 import { useToast } from '@/components/ui/use-toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import ManageEventPage from './ManageEventPage';
@@ -46,11 +47,7 @@ const EventDashboard: React.FC<EventDashboardProps> = ({ event, onClose, user })
   const { toast } = useToast();
   const { t } = useTranslation();
 
-  useEffect(() => {
-    fetchAttendances();
-  }, [event.id]);
-
-  const fetchAttendances = async () => {
+  const fetchAttendances = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/attendance/events/${event.id}/attendances`, {
@@ -105,7 +102,11 @@ const EventDashboard: React.FC<EventDashboardProps> = ({ event, onClose, user })
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [event.id]);
+
+  useEffect(() => {
+    fetchAttendances();
+  }, [fetchAttendances]);
 
   const updateAttendanceStatus = async (attendanceId: string, status: 'APPROVED' | 'REJECTED') => {
     try {
@@ -271,9 +272,11 @@ const EventDashboard: React.FC<EventDashboardProps> = ({ event, onClose, user })
               {filteredAttendances.map((attendance) => (
                 <div key={attendance._id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                   <div className="flex items-start gap-4">
-                    <img
-                      src={attendance.userId.avatarUrl || `https://i.pravatar.cc/150?img=${attendance.userId._id}`}
+                    <Image
+                      src={attendance.userId.avatarUrl || `https://i.pravatar.cc/150?img=${attendance.userId._id}` || '/images/default-avatar.png'}
                       alt={attendance.userId.name}
+                      width={48}
+                      height={48}
                       className="w-12 h-12 rounded-full object-cover"
                     />
                     <div className="flex-1">
