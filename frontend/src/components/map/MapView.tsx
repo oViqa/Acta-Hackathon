@@ -9,6 +9,7 @@ import EventDashboard from '../events/EventDashboard';
 import Leaderboard from '../leaderboard/Leaderboard';
 import AdminLogin from '../admin/AdminLogin';
 import AdminDashboard from '../admin/AdminDashboard';
+import HostDashboard from '../host/HostDashboard';
 import { MapLoadingSkeleton } from '../ui/LoadingSkeleton';
 import ThemeToggle from '../ui/ThemeToggle';
 import LanguageToggle from '../ui/LanguageToggle';
@@ -65,6 +66,8 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showHostDashboard, setShowHostDashboard] = useState(false);
+  const [selectedEventForHost, setSelectedEventForHost] = useState<Event | null>(null);
 
   const puddingIcon = useMemo(() =>
     L.divIcon({
@@ -77,16 +80,6 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
     }),
   []);
 
-  const hotPuddingIcon = useMemo(() =>
-    L.divIcon({
-      className: 'hot-pudding-marker',
-      html:
-        '<div class="hot-pudding-marker-inner" style="width:28px;height:28px;border-radius:9999px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ff4757,#ff3838);color:#fff;font-size:16px;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,.15);position:relative;animation:pulse 2s infinite;"><span style="position:absolute;top:-8px;right:-8px;background:#ff4757;color:white;font-size:8px;padding:2px 4px;border-radius:4px;font-weight:bold;">🔥</span>🍮</div>',
-      iconSize: [28, 28],
-      iconAnchor: [14, 28],
-      popupAnchor: [0, -28],
-    }),
-  []);
 
   const meIcon = useMemo(() =>
     L.divIcon({
@@ -120,7 +113,7 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
       
       const mapped: Event[] = list.map((e: any) => {
         const createdAt = e.createdAt ? new Date(e.createdAt) : new Date(Date.now() - Math.random() * 86400000);
-        const isHot = (Date.now() - createdAt.getTime()) < 10 * 60 * 1000; // Hot if created within last 10 minutes
+        const isHot = false; // Disabled hot feature
         
         return {
           id: e.id || e._id,
@@ -155,8 +148,8 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
           startTime: '2025-10-06T15:00:00Z', 
           attendeeLimit: 15, 
           attendeeCount: 8,
-          createdAt: new Date(now.getTime() - 5 * 60 * 1000).toISOString(), // 5 minutes ago - HOT!
-          isHot: true
+          createdAt: new Date(now.getTime() - 5 * 60 * 1000).toISOString(),
+          isHot: false
         },
         { 
           id: '2', 
@@ -273,6 +266,11 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
   const handleAdminSuccess = () => {
     setIsAdmin(true);
     setShowAdminLogin(false);
+  };
+
+  const handleOpenHostDashboard = (event: Event) => {
+    setSelectedEventForHost(event);
+    setShowHostDashboard(true);
   };
 
   const formatTimeUntilEvent = (startTime: string) => {
@@ -426,7 +424,7 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
             <Marker
               key={event.id}
               position={[event.location.lat, event.location.lng]}
-              icon={event.isHot ? hotPuddingIcon : puddingIcon}
+              icon={puddingIcon}
               eventHandlers={{ click: () => handleMarkerClick(event) }}
             >
               <Popup className="custom-popup">
@@ -434,11 +432,6 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-lg text-gray-900 leading-tight">{event.title}</h3>
-                      {event.isHot && (
-                        <span className="animate-hot-badge bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold flex items-center gap-1">
-                          🔥 HOT
-                        </span>
-                      )}
                     </div>
                     <button onClick={() => setSelectedEvent(null)} className="text-gray-400 hover:text-gray-600 ml-2">×</button>
                   </div>
@@ -462,6 +455,16 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
                         className="bg-orange-500 hover:bg-orange-600 text-white flex-1 text-sm py-2 rounded-lg transition-colors hover:scale-105 active:scale-95"
                       >
                         Join Event 🍮
+                      </button>
+                    )}
+                    
+                    {/* Host Management Button */}
+                    {user && event.organizer && event.organizer.id === user.id && (
+                      <button 
+                        onClick={() => handleOpenHostDashboard(event)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white flex-1 text-sm py-2 rounded-lg transition-colors hover:scale-105 active:scale-95 mt-2"
+                      >
+                        👑 Manage Event
                       </button>
                     )}
                   </div>
@@ -596,6 +599,17 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
         <AdminLogin
           onSuccess={handleAdminSuccess}
           onClose={() => setShowAdminLogin(false)}
+        />
+      )}
+
+      {/* Host Dashboard */}
+      {selectedEventForHost && (
+        <HostDashboard
+          eventId={selectedEventForHost.id}
+          onClose={() => {
+            setShowHostDashboard(false);
+            setSelectedEventForHost(null);
+          }}
         />
       )}
 
