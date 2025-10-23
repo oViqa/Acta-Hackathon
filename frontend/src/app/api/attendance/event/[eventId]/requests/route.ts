@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/database';
+import { getUserIdFromRequest } from '@/lib/auth-helpers';
 import { ObjectId } from 'mongodb';
 
 // GET all requests for an event (HOST ONLY)
@@ -10,14 +11,12 @@ export async function GET(
   try {
     const { eventId } = params;
     
-    // Get user from token (simplified for now)
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Get userId from JWT token
+    const userId = getUserIdFromRequest(req);
     
-    const token = authHeader.split(' ')[1];
-    const userId = 'mock-user-id'; // TODO: Extract from JWT token
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
 
     let db;
     try {
