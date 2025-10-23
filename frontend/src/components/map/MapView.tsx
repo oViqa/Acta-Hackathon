@@ -278,6 +278,24 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
   };
 
   const handleOpenHostDashboard = (event: Event) => {
+    // Debug logging
+    console.log('Opening host dashboard for event:', event.id);
+    console.log('Event organizer ID:', event.organizer?.id);
+    console.log('Current user ID:', user?.id);
+    console.log('Match:', event.organizer?.id === user?.id);
+    
+    // Extra safety check
+    if (!user) {
+      toast({ title: 'Authentication required', description: 'Please log in to manage events' });
+      onLogin();
+      return;
+    }
+    
+    if (event.organizer?.id !== user.id) {
+      toast({ title: 'Access denied', description: 'Only the event host can manage this event', variant: 'destructive' });
+      return;
+    }
+    
     setSelectedEventForHost(event);
     setShowHostDashboard(true);
   };
@@ -501,27 +519,24 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
                   <div className="flex gap-2">
                     {user && event.organizer?.id === user.id ? (
                       <button 
-                        onClick={handleEventDashboardOpen}
+                        onClick={() => handleOpenHostDashboard(event)}
                         className="bg-blue-500 hover:bg-blue-600 text-white flex-1 text-sm py-2 rounded-lg transition-colors hover:scale-105 active:scale-95"
                       >
-                        Manage Event 📊
+                        👑 Manage Event
                       </button>
                     ) : (
                       <button 
-                        onClick={() => { setSelectedEventForJoin(event); setIsJoinEventModalOpen(true); }}
+                        onClick={() => { 
+                          if (!user) {
+                            onLogin();
+                            return;
+                          }
+                          setSelectedEventForJoin(event); 
+                          setIsJoinEventModalOpen(true); 
+                        }}
                         className="bg-orange-500 hover:bg-orange-600 text-white flex-1 text-sm py-2 rounded-lg transition-colors hover:scale-105 active:scale-95"
                       >
                         Join Event 🍮
-                      </button>
-                    )}
-                    
-                    {/* Host Management Button */}
-                    {user && event.organizer && event.organizer.id === user.id && (
-                      <button 
-                        onClick={() => handleOpenHostDashboard(event)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white flex-1 text-sm py-2 rounded-lg transition-colors hover:scale-105 active:scale-95 mt-2"
-                      >
-                        👑 Manage Event
                       </button>
                     )}
                   </div>
@@ -590,6 +605,10 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
               <div className="mt-6 flex justify-end space-x-2">
                 <button
                   onClick={() => {
+                    if (!user) {
+                      onLogin();
+                      return;
+                    }
                     setSelectedEventForJoin(selectedEvent);
                     setIsJoinEventModalOpen(true);
                   }}
