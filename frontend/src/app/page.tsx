@@ -25,7 +25,7 @@ export default function Home() {
   const { user, isLoading } = useAuthStore();
   const [showLogin, setShowLogin] = useState(false);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   const handleCreateEvent = () => {
     if (!user) {
@@ -36,13 +36,23 @@ export default function Home() {
   };
 
   const handleSignIn = () => {
+    localStorage.setItem('hasSeenWelcome', 'true');
     setShowWelcome(false);
     setShowLogin(true);
   };
 
   const handleSkipToDemo = () => {
+    localStorage.setItem('hasSeenWelcome', 'true');
     setShowWelcome(false);
   };
+
+  // Check if user has seen welcome page before
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
+    if (!hasSeenWelcome) {
+      setShowWelcome(true);
+    }
+  }, []);
 
   if (isLoading) {
     return (
