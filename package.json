@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "vercel": "^48.2.0"
+    "vercel": "^41.0.2"
   },
   "engines": {
     "node": ">=20.0.0",
