@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PendingRequestsList from './PendingRequestsList';
 import AttendeesList from './AttendeesList';
 import { useAuthStore } from '@/store/authStore';
+import { useToast } from '@/components/ui/use-toast';
 
 interface HostDashboardProps {
   eventId: string;
@@ -16,6 +17,7 @@ export default function HostDashboard({ eventId, onClose }: HostDashboardProps) 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pending');
   const { token } = useAuthStore();
+  const { toast } = useToast();
 
   const fetchRequests = useCallback(async () => {
     try {
@@ -64,10 +66,17 @@ export default function HostDashboard({ eventId, onClose }: HostDashboardProps) 
       await fetchRequests();
       
       // Show success message
-      alert('Request approved!');
+      toast({
+        title: 'Request approved!',
+        description: 'The user has been added to your event.',
+      });
     } catch (error) {
       console.error('Error approving:', error);
-      alert('Failed to approve request');
+      toast({
+        title: 'Error',
+        description: 'Failed to approve request',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -85,10 +94,17 @@ export default function HostDashboard({ eventId, onClose }: HostDashboardProps) 
       if (!response.ok) throw new Error('Failed to reject');
 
       await fetchRequests();
-      alert('Request rejected');
+      toast({
+        title: 'Request rejected',
+        description: 'The join request has been declined.',
+      });
     } catch (error) {
       console.error('Error rejecting:', error);
-      alert('Failed to reject request');
+      toast({
+        title: 'Error',
+        description: 'Failed to reject request',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -105,10 +121,17 @@ export default function HostDashboard({ eventId, onClose }: HostDashboardProps) 
       if (!response.ok) throw new Error('Failed to remove');
 
       await fetchRequests();
-      alert('Attendee removed');
+      toast({
+        title: 'Attendee removed',
+        description: 'The user has been removed from your event.',
+      });
     } catch (error) {
       console.error('Error removing:', error);
-      alert('Failed to remove attendee');
+      toast({
+        title: 'Error',
+        description: 'Failed to remove attendee',
+        variant: 'destructive',
+      });
     }
   };
 

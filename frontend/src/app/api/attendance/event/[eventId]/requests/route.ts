@@ -22,37 +22,13 @@ export async function GET(
     try {
       ({ db } = await connectToDatabase());
     } catch (dbError) {
-      console.warn('MongoDB connection failed, falling back to mock data:', dbError);
-      // Return mock data
+      console.warn('MongoDB connection failed, falling back to empty data:', dbError);
+      // Return empty data when DB is unavailable
       return NextResponse.json({
-        pendingRequests: [
-          {
-            _id: 'mock-request-1',
-            userId: {
-              _id: 'mock-user-1',
-              name: 'John Doe',
-              email: 'john@example.com',
-              points: 150
-            },
-            requestMessage: 'I love pudding! Can I join?',
-            puddingPhotoUrl: 'https://example.com/pudding.jpg',
-            requestedAt: new Date().toISOString()
-          }
-        ],
-        approvedAttendees: [
-          {
-            _id: 'mock-attendee-1',
-            userId: {
-              _id: 'mock-user-2',
-              name: 'Jane Smith',
-              email: 'jane@example.com',
-              points: 200
-            },
-            respondedAt: new Date().toISOString()
-          }
-        ],
+        pendingRequests: [],
+        approvedAttendees: [],
         eventCapacity: 15,
-        currentAttendees: 1
+        currentAttendees: 0
       });
     }
 

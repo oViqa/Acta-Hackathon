@@ -109,12 +109,9 @@ export default function RequestCard({ request, onApprove, onReject }: RequestCar
 
               <Button
                 size="sm"
-                variant="destructive"
-                className="flex items-center gap-1"
-                onClick={() => {
-                  const reason = prompt('Reason for rejection (optional):');
-                  onReject(request._id, reason || undefined);
-                }}
+                variant="outline"
+                className="flex items-center gap-1 border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
+                onClick={() => onReject(request._id)}
               >
                 <XCircle className="w-4 h-4" />
                 Reject
