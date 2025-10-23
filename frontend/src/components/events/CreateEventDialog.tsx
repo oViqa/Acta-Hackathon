@@ -30,15 +30,47 @@ interface CreateEventDialogProps {
 export function CreateEventDialog({ open, onOpenChange }: CreateEventDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [location, setLocation] = useState({ lat: 52.520008, lng: 13.404954 });
+  const [location, setLocation] = useState({ lat: 52.520008, lng: 13.404954, address: '' });
   const [startDate, setStartDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [duration, setDuration] = useState('2');
   const [attendeeLimit, setAttendeeLimit] = useState('15');
   const [loading, setLoading] = useState(false);
+  const [gettingLocation, setGettingLocation] = useState(false);
   const { toast } = useToast();
+
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: 'Geolocation not supported',
+        description: 'Your browser does not support geolocation',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setLocation({ lat: latitude, lng: longitude, address: '' });
+        setGettingLocation(false);
+        toast({
+          title: 'Location updated',
+          description: 'Map centered on your current location',
+        });
+      },
+      (error) => {
+        setGettingLocation(false);
+        toast({
+          title: 'Location access denied',
+          description: 'Please enable location access to use this feature',
+          variant: 'destructive',
+        });
+        console.error('Geolocation error:', error);
+      }
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,12 +80,17 @@ export function CreateEventDialog({ open, onOpenChange }: CreateEventDialogProps
       const startDateTime = new Date(`${startDate}T${startTime}`);
       const endDateTime = new Date(startDateTime.getTime() + parseInt(duration) * 60 * 60 * 1000);
 
+      // Extract city from location address or use coordinates
+      const city = location.address || `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`;
+
       const eventData = {
         title,
         description,
-        location,
+        location: {
+          lat: location.lat,
+          lng: location.lng
+        },
         city,
-        state,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
         attendeeLimit: parseInt(attendeeLimit)
@@ -115,36 +152,38 @@ export function CreateEventDialog({ open, onOpenChange }: CreateEventDialogProps
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="city">City *</Label>
-              <Input
-                id="city"
-                placeholder="Berlin"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="state">State *</Label>
-              <Input
-                id="state"
-                placeholder="Berlin"
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
           <div className="space-y-2">
-            <Label>Event Location *</Label>
+            <div className="flex items-center justify-between">
+              <Label>Event Location *</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleUseMyLocation}
+                disabled={gettingLocation}
+                className="text-xs"
+              >
+                {gettingLocation ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mr-1"></div>
+                    Getting location...
+                  </>
+                ) : (
+                  <>
+                    📍 Use My Location
+                  </>
+                )}
+              </Button>
+            </div>
+            <p className="text-sm text-gray-500">Pin the exact location on the map where your event will take place</p>
             <LocationPicker
               onLocationSelect={(selectedLocation) => setLocation(selectedLocation)}
               initialLocation={location}
               height="300px"
             />
+            {location.address && (
+              <p className="text-xs text-gray-600 mt-1">📍 {location.address}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

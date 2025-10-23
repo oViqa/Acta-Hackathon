@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/database';
+import { getUserIdFromRequest } from '@/lib/auth-helpers';
+import { ObjectId } from 'mongodb';
 
 export async function GET(request: NextRequest) {
   try {
@@ -67,16 +69,32 @@ export async function GET(request: NextRequest) {
       .sort({ startTime: 1 })
       .toArray();
 
+    const usersCol = db.collection('users');
+    
     const eventsWithAttendance = await Promise.all(
       docs.map(async (event) => {
         const attendances = await attendancesCol
           .find({ eventId: event._id.toString(), status: 'APPROVED' })
           .toArray();
         
+        // Get organizer data
+        let organizer = null;
+        if (event.organizerId) {
+          const organizerUser = await usersCol.findOne({ _id: event.organizerId });
+          if (organizerUser) {
+            organizer = {
+              id: organizerUser._id.toString(),
+              name: organizerUser.name,
+              email: organizerUser.email
+            };
+          }
+        }
+        
         return {
           ...event,
           id: event._id.toString(),
           attendeeCount: attendances.length,
+          organizer,
         };
       })
     );
@@ -90,6 +108,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Get userId from JWT token
+    const userId = getUserIdFromRequest(request);
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
     const eventData = await request.json();
     
     let db;
@@ -98,14 +123,31 @@ export async function POST(request: NextRequest) {
     } catch (dbError) {
       console.warn('MongoDB connection failed, falling back to mock events for POST:', dbError);
       // Fallback to mock event creation
-      const mockEvent = { _id: new ObjectId(), ...eventData, id: new ObjectId().toHexString(), createdAt: new Date() };
+      const mockEvent = { 
+        _id: new ObjectId(), 
+        ...eventData, 
+        organizerId: userId,
+        id: new ObjectId().toHexString(), 
+        createdAt: new Date() 
+      };
       console.log('Mock event created:', mockEvent);
       return NextResponse.json({ message: 'Event created (mock)', event: mockEvent }, { status: 201 });
     }
     
     const eventsCol = db.collection('events');
+    const usersCol = db.collection('users');
+    
+    // Get user data to include organizer info
+    const user = await usersCol.findOne({ _id: new ObjectId(userId) });
+    
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    
+    // Create event with organizerId
     const result = await eventsCol.insertOne({
       ...eventData,
+      organizerId: new ObjectId(userId),
       createdAt: new Date(),
       status: 'UPCOMING'
     });
@@ -115,10 +157,16 @@ export async function POST(request: NextRequest) {
       event: {
         id: result.insertedId.toString(),
         ...eventData,
+        organizerId: userId,
+        organizer: {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email
+        },
         createdAt: new Date().toISOString(),
         status: 'UPCOMING'
       }
-    });
+    }, { status: 201 });
   } catch (error) {
     console.error('Failed to create event:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
