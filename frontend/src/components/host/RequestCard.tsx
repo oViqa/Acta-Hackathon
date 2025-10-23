@@ -64,6 +64,25 @@ export default function RequestCard({ request, onApprove, onReject }: RequestCar
               </div>
             )}
 
+            {/* Pudding Details */}
+            {(request.puddingName || request.puddingDescription) && (
+              <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg mb-3 border border-orange-200 dark:border-orange-800">
+                <p className="text-xs font-semibold text-orange-700 dark:text-orange-400 mb-1">
+                  🍮 Bringing:
+                </p>
+                {request.puddingName && (
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {request.puddingName}
+                  </p>
+                )}
+                {request.puddingDescription && (
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    {request.puddingDescription}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex gap-2 flex-wrap">
               {request.puddingPhotoUrl && (

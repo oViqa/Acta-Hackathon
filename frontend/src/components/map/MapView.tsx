@@ -302,7 +302,6 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
       fetchEvents();
     } catch (error: any) {
       console.error('Error joining event:', error);
-      const { toast } = useToast();
       toast({
         title: 'Error',
         description: error.message || 'Failed to send join request',
