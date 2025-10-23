@@ -301,21 +301,29 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
     <div className="relative h-screen bg-gray-50 dark:bg-gray-900">
       {/* Kleinanzeigen-style Header */}
       <div className="absolute top-0 left-0 right-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-0">
             {/* Logo and Title */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center shadow-sm">
-                <span className="text-white text-xl">🍮</span>
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center shadow-sm">
+                  <span className="text-white text-lg sm:text-xl">🍮</span>
+                </div>
+                <div>
+                  <h1 className="font-bold text-base sm:text-xl text-gray-900 dark:text-white">{t('app.title')}</h1>
+                  <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 hidden sm:block">{t('app.subtitle')}</p>
+                </div>
               </div>
-              <div>
-                <h1 className="font-bold text-xl text-gray-900 dark:text-white">{t('app.title')}</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{t('app.subtitle')}</p>
+              
+              {/* Mobile only: Theme and Language toggles */}
+              <div className="flex items-center gap-2 sm:hidden">
+                <ThemeToggle />
+                <LanguageToggle />
               </div>
             </div>
             
             {/* Right controls: create/login */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto flex-wrap justify-center">
               {/* TODO: Re-enable radius selector when location feature is complete */}
               {/* <select
                 value={radiusKm}
@@ -339,19 +347,20 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
 
               <button
                 onClick={() => setShowLeaderboard(true)}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 shadow-sm transition-colors hover:scale-105 active:scale-95"
+                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm flex items-center gap-1 sm:gap-2 shadow-sm transition-colors hover:scale-105 active:scale-95"
                 title="View leaderboard"
               >
-                <Trophy className="w-4 h-4" />
-                <span>🏆</span>
+                <Trophy className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">🏆</span>
               </button>
 
               <button
                 onClick={onCreateEvent}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 shadow-sm transition-colors hover:scale-105 active:scale-95"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg font-semibold text-xs sm:text-sm flex items-center gap-1 sm:gap-2 shadow-sm transition-colors hover:scale-105 active:scale-95"
               >
-                <Plus className="w-4 h-4" />
-                <span>{t('create.event')}</span>
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">{t('create.event')}</span>
+                <span className="xs:hidden">Create</span>
               </button>
 
               {/* TODO: Re-enable admin button when needed */}
@@ -363,18 +372,22 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
                 <Shield className="w-4 h-4" />
               </button> */}
 
-              <ThemeToggle />
-              <LanguageToggle />
+              {/* Desktop only: Theme and Language toggles */}
+              <div className="hidden sm:flex items-center gap-2 sm:gap-3">
+                <ThemeToggle />
+                <LanguageToggle />
+              </div>
 
               {user ? (
-                <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors hover:scale-105 active:scale-95">
-                  <User className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{user.name}</span>
+                <button className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors hover:scale-105 active:scale-95">
+                  <User className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-300" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:inline">{user.name}</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 sm:hidden">{user.name.split(' ')[0]}</span>
                 </button>
               ) : (
                 <button
                   onClick={onLogin}
-                  className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors hover:scale-105 active:scale-95"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors hover:scale-105 active:scale-95"
                 >
                   {t('login')}
                 </button>
@@ -385,7 +398,7 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
       </div>
 
       {/* Map View */}
-      <div className="h-full w-full pt-16 relative">
+      <div className="h-full w-full pt-20 sm:pt-16 relative">
         <MapContainer
           center={userLocation ? [userLocation.lat, userLocation.lng] : defaultCenter}
           zoom={userLocation ? 10 : defaultZoom}
@@ -425,9 +438,14 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
               key={event.id}
               position={[event.location.lat, event.location.lng]}
               icon={puddingIcon}
-              eventHandlers={{ click: () => handleMarkerClick(event) }}
+              eventHandlers={{ 
+                click: (e) => {
+                  e.originalEvent.stopPropagation();
+                  handleMarkerClick(event);
+                }
+              }}
             >
-              <Popup className="custom-popup">
+              <Popup className="custom-popup" autoPan={false}>
                 <div className="p-4 min-w-[280px]">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">

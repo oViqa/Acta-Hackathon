@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDatabase } from '@/lib/database';
+import { connectToDatabase } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,66 +10,34 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || 'UPCOMING';
     const limit = searchParams.get('limit') || '50';
 
-    const db = await connectDatabase();
-    
-    if (!db) {
-      // Return mock events when DB is not available
-      const now = new Date();
+    let db;
+    try {
+      ({ db } = await connectToDatabase());
+    } catch (dbError) {
+      console.warn('MongoDB connection failed, falling back to mock events for GET:', dbError);
+      // Fallback to mock events if DB connection fails
       const mockEvents = [
-        { 
-          id: '1', 
-          title: 'Schoko-Pudding Sonntag', 
-          location: { lat: 52.520008, lng: 13.404954 }, 
-          city: 'Berlin', 
-          startTime: '2025-10-06T15:00:00Z', 
-          attendeeLimit: 15, 
-          attendeeCount: 8,
-          createdAt: new Date(now.getTime() - 5 * 60 * 1000).toISOString(),
-          isHot: true
+        {
+          _id: new ObjectId(),
+          title: 'Mock Event 1',
+          description: 'This is a mock event from the fallback.',
+          location: { type: 'Point', coordinates: [13.404954, 52.520008] }, // Berlin
+          city: 'Berlin',
+          startTime: new Date().toISOString(),
+          attendeeLimit: 10,
+          attendeeCount: 3,
+          isHot: true,
         },
-        { 
-          id: '2', 
-          title: 'Vanille Vibes', 
-          location: { lat: 48.1351, lng: 11.5820 }, 
-          city: 'Munich', 
-          startTime: '2025-10-07T14:00:00Z', 
-          attendeeLimit: 12, 
+        {
+          _id: new ObjectId(),
+          title: 'Mock Event 2',
+          description: 'Another mock event.',
+          location: { type: 'Point', coordinates: [11.5820, 48.1351] }, // Munich
+          city: 'Munich',
+          startTime: new Date(Date.now() + 3600000).toISOString(),
+          attendeeLimit: 20,
           attendeeCount: 5,
-          createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
-          isHot: false
-        },
-        { 
-          id: '3', 
-          title: 'Caramel Connect', 
-          location: { lat: 50.1109, lng: 8.6821 }, 
-          city: 'Frankfurt', 
-          startTime: '2025-10-08T16:00:00Z', 
-          attendeeLimit: 20, 
-          attendeeCount: 12,
-          createdAt: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
-          isHot: false
-        },
-        { 
-          id: '4', 
-          title: 'Chocolate Heaven', 
-          location: { lat: 53.5511, lng: 9.9937 }, 
-          city: 'Hamburg', 
-          startTime: '2025-10-09T18:00:00Z', 
-          attendeeLimit: 25, 
-          attendeeCount: 18,
-          createdAt: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
-          isHot: false
-        },
-        { 
-          id: '5', 
-          title: 'Pudding Paradise', 
-          location: { lat: 51.2277, lng: 6.7735 }, 
-          city: 'Düsseldorf', 
-          startTime: '2025-10-10T16:30:00Z', 
-          attendeeLimit: 18, 
-          attendeeCount: 10,
-          createdAt: new Date(now.getTime() - 15 * 60 * 1000).toISOString(),
-          isHot: false
+          isHot: false,
         },
       ];
       return NextResponse.json({ events: mockEvents, total: mockEvents.length });
@@ -124,21 +92,15 @@ export async function POST(request: NextRequest) {
   try {
     const eventData = await request.json();
     
-    const db = await connectDatabase();
-    
-    if (!db) {
-      // Mock event creation when DB is not available
-      const mockEvent = {
-        id: `mock-event-${Date.now()}`,
-        ...eventData,
-        createdAt: new Date().toISOString(),
-        status: 'UPCOMING'
-      };
-      
-      return NextResponse.json({
-        message: 'Event created (mock mode)',
-        event: mockEvent
-      });
+    let db;
+    try {
+      ({ db } = await connectToDatabase());
+    } catch (dbError) {
+      console.warn('MongoDB connection failed, falling back to mock events for POST:', dbError);
+      // Fallback to mock event creation
+      const mockEvent = { _id: new ObjectId(), ...eventData, id: new ObjectId().toHexString(), createdAt: new Date() };
+      console.log('Mock event created:', mockEvent);
+      return NextResponse.json({ message: 'Event created (mock)', event: mockEvent }, { status: 201 });
     }
     
     const eventsCol = db.collection('events');

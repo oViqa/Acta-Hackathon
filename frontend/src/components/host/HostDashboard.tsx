@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PendingRequestsList from './PendingRequestsList';
 import AttendeesList from './AttendeesList';
@@ -17,7 +17,7 @@ export default function HostDashboard({ eventId, onClose }: HostDashboardProps) 
   const [activeTab, setActiveTab] = useState('pending');
   const { token } = useAuthStore();
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       const response = await fetch(`/api/attendance/event/${eventId}/requests`, {
         headers: {
@@ -35,11 +35,11 @@ export default function HostDashboard({ eventId, onClose }: HostDashboardProps) 
     } finally {
       setLoading(false);
     }
-  };
+  }, [eventId, token]);
 
   useEffect(() => {
     fetchRequests();
-  }, [eventId, token]);
+  }, [eventId, token, fetchRequests]);
 
   const handleApprove = async (requestId: string) => {
     try {

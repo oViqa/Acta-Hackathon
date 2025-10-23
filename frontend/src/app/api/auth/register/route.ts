@@ -1,25 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { connectDatabase } from '@/lib/database';
+import { connectToDatabase } from '@/lib/database';
 
 export async function POST(request: NextRequest) {
   try {
     const { name, email, password } = await request.json();
     
-    const db = await connectDatabase();
-    
-    if (!db) {
-      // Mock registration when DB is not available
-      const userId = `mock-user-${Date.now()}`;
-      const token = `mock-${userId}-token`;
-      const user = { id: userId, email, name, role: 'user' };
-      
-      return NextResponse.json({
-        message: 'User registered (mock mode)',
-        user,
-        token,
-      });
+    let db;
+    try {
+      ({ db } = await connectToDatabase());
+    } catch (dbError) {
+      console.warn('MongoDB connection failed, falling back to mock registration:', dbError);
+      // Fallback to mock registration if DB connection fails
+      const mockUserId = `mock-user-${Date.now()}`;
+      const token = jwt.sign({ userId: mockUserId, role: 'user' }, JWT_SECRET, { expiresIn: '1h' });
+      return NextResponse.json({ message: 'User registered (mock)', user: { id: mockUserId, email, name, role: 'user' }, token });
     }
     
     const users = db.collection('users');

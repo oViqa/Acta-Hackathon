@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
+import Image from 'next/image';
 
 interface RequestCardProps {
   request: any;
@@ -58,7 +59,7 @@ export default function RequestCard({ request, onApprove, onReject }: RequestCar
             {request.requestMessage && (
               <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg mb-3">
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                  💬 "{request.requestMessage}"
+                  💬 &ldquo;{request.requestMessage}&rdquo;
                 </p>
               </div>
             )}
@@ -104,9 +105,11 @@ export default function RequestCard({ request, onApprove, onReject }: RequestCar
             {/* Photo Preview */}
             {showPhoto && request.puddingPhotoUrl && (
               <div className="mt-4">
-                <img
+                <Image
                   src={request.puddingPhotoUrl}
                   alt="Pudding photo"
+                  width={400}
+                  height={300}
                   className="max-w-sm rounded-lg border shadow-sm"
                 />
               </div>
