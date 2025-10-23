@@ -25,9 +25,10 @@ const LocationPicker = dynamic(() => import('@/components/map/LocationPicker'), 
 interface CreateEventDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onEventCreated?: () => void;
 }
 
-export function CreateEventDialog({ open, onOpenChange }: CreateEventDialogProps) {
+export function CreateEventDialog({ open, onOpenChange, onEventCreated }: CreateEventDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState({ lat: 52.520008, lng: 13.404954, address: '' });
@@ -103,8 +104,12 @@ export function CreateEventDialog({ open, onOpenChange }: CreateEventDialogProps
         description: 'Your pudding meetup is now live on the map.',
       });
 
+      // Call the callback to refresh events
+      if (onEventCreated) {
+        onEventCreated();
+      }
+
       onOpenChange(false);
-      window.location.reload();
     } catch (error: any) {
       const errorMessage = handleApiError(error);
       toast({
@@ -177,7 +182,11 @@ export function CreateEventDialog({ open, onOpenChange }: CreateEventDialogProps
             </div>
             <p className="text-sm text-gray-500">Pin the exact location on the map where your event will take place</p>
             <LocationPicker
-              onLocationSelect={(selectedLocation) => setLocation(selectedLocation)}
+              onLocationSelect={(selectedLocation) => setLocation({
+                lat: selectedLocation.lat,
+                lng: selectedLocation.lng,
+                address: selectedLocation.address || ''
+              })}
               initialLocation={location}
               height="300px"
             />

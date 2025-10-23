@@ -26,6 +26,7 @@ export default function Home() {
   const [showLogin, setShowLogin] = useState(false);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [mapKey, setMapKey] = useState(0);
 
   const handleCreateEvent = () => {
     if (!user) {
@@ -33,6 +34,11 @@ export default function Home() {
     } else {
       setShowCreateEvent(true);
     }
+  };
+
+  const handleEventCreated = () => {
+    // Force MapView to refresh by changing its key
+    setMapKey(prev => prev + 1);
   };
 
   const handleSignIn = () => {
@@ -70,7 +76,7 @@ export default function Home() {
     <main className="relative w-full h-screen overflow-hidden">
       {/* Map - Always in background */}
       <div className="w-full h-full">
-        <MapView onCreateEvent={handleCreateEvent} onLogin={() => setShowLogin(true)} user={user} />
+        <MapView key={mapKey} onCreateEvent={handleCreateEvent} onLogin={() => setShowLogin(true)} user={user} />
       </div>
 
       {/* Welcome Page Overlay */}
@@ -80,7 +86,11 @@ export default function Home() {
 
       {/* Dialogs */}
       <LoginDialog open={showLogin} onOpenChange={setShowLogin} />
-      <CreateEventDialog open={showCreateEvent} onOpenChange={setShowCreateEvent} />
+      <CreateEventDialog 
+        open={showCreateEvent} 
+        onOpenChange={setShowCreateEvent}
+        onEventCreated={handleEventCreated}
+      />
     </main>
   );
 }
