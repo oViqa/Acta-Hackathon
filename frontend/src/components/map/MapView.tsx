@@ -105,6 +105,14 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
   const defaultCenter: [number, number] = [51.1657, 10.4515];
   const defaultZoom = 6;
 
+  // Restore session on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      await useAuthStore.getState().checkAuth();
+    };
+    checkSession();
+  }, []);
+
   const fetchEvents = async (opts?: { lat?: number; lng?: number; radiusKm?: number }) => {
     try {
       setIsLoading(true);
@@ -251,10 +259,56 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
   //   );
   // };
 
-  const handleJoinEventSubmit = (joinData: any) => {
-    console.log('Joining event:', joinData);
-    // TODO: Implement actual join request
-    alert('Join request submitted! Waiting for organizer approval.');
+  const handleJoinEventSubmit = async (joinData: any) => {
+    try {
+      const { toast } = useToast();
+      const { token } = useAuthStore.getState();
+      
+      // Convert photo to base64
+      const photoFile = joinData.puddingPhoto;
+      const base64Photo = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(photoFile);
+      });
+
+      // Send join request to API
+      const response = await fetch('/api/attendance/join', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          eventId: joinData.eventId,
+          puddingPhotoUrl: base64Photo,
+          puddingName: joinData.puddingName,
+          puddingDescription: joinData.puddingDescription,
+          message: joinData.puddingDescription || `Bringing ${joinData.puddingName || 'pudding'}`
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to join event');
+      }
+
+      toast({
+        title: 'Request sent!',
+        description: 'Your join request has been sent to the organizer.'
+      });
+      
+      // Refresh events to show updated attendee count
+      fetchEvents();
+    } catch (error: any) {
+      console.error('Error joining event:', error);
+      const { toast } = useToast();
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to send join request',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleChatOpen = () => {
@@ -415,25 +469,16 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
                       <ChevronDown className="w-3 h-3 text-gray-500" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuContent align="end" className="w-56 bg-white border-orange-200">
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.name}</p>
-                        <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                        <p className="text-sm font-medium leading-none text-gray-900">{user.name}</p>
+                        <p className="text-xs leading-none text-gray-500">{user.email}</p>
                       </div>
                     </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="cursor-pointer">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Settings</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    <DropdownMenuSeparator className="bg-orange-100" />
                     <DropdownMenuItem 
-                      className="cursor-pointer text-red-600 focus:text-red-600"
+                      className="cursor-pointer text-orange-600 hover:bg-orange-50 focus:bg-orange-50 focus:text-orange-600"
                       onClick={() => useAuthStore.getState().logout()}
                     >
                       <LogOut className="mr-2 h-4 w-4" />

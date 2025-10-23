@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { eventId, puddingPhotoUrl, message } = body;
+    const { eventId, puddingPhotoUrl, puddingName, puddingDescription, message } = body;
     
     // Get userId from JWT token
     const userId = getUserIdFromRequest(req);
@@ -63,6 +63,8 @@ export async function POST(req: NextRequest) {
       eventId: new ObjectId(eventId),
       status: 'pending',
       puddingPhotoUrl,
+      puddingName,
+      puddingDescription,
       requestMessage: message,
       requestedAt: new Date(),
       createdAt: new Date(),
