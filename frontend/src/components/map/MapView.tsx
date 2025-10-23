@@ -559,68 +559,6 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
         )}
       </div>
 
-      {/* Event Detail Modal */}
-      {selectedEvent && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-30 p-4">
-          <div className="apple-card max-w-lg w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {selectedEvent.title}
-                  </h2>
-                  {selectedEvent.isHot && (
-                    <span className="animate-hot-badge bg-red-500 text-white text-sm px-3 py-1 rounded-full font-bold flex items-center gap-1">
-                      🔥 HOT
-                    </span>
-                  )}
-                </div>
-                <button
-                  onClick={() => setSelectedEvent(null)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl"
-                >
-                  ×
-                </button>
-              </div>
-              
-              {selectedEvent.description && (
-                <p className="text-gray-600 mb-6">{selectedEvent.description}</p>
-              )}
-
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2 text-gray-600">
-                  <MapPin className="w-4 h-4" />
-                  <span>{selectedEvent.city}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-gray-600">
-                  <Calendar className="w-4 h-4" />
-                  <span>{new Date(selectedEvent.startTime).toLocaleString()}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-gray-600">
-                  <Users className="w-4 h-4" />
-                  <span>{selectedEvent.attendeeCount}/{selectedEvent.attendeeLimit} attendees</span>
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end space-x-2">
-                <button
-                  onClick={() => {
-                    if (!user) {
-                      onLogin();
-                      return;
-                    }
-                    setSelectedEventForJoin(selectedEvent);
-                    setIsJoinEventModalOpen(true);
-                  }}
-                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg"
-                >
-                  Join Event
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Join Event Modal */}
       <JoinEventModal
