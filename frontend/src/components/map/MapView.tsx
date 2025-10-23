@@ -261,7 +261,6 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
 
   const handleJoinEventSubmit = async (joinData: any) => {
     try {
-      const { toast } = useToast();
       const { token } = useAuthStore.getState();
       
       // Convert photo to base64
