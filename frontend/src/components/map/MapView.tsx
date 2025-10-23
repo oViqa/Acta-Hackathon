@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { MapPin, Users, Clock, Calendar, Plus, User, Crown, Trophy, Shield } from 'lucide-react';
+import { MapPin, Users, Clock, Calendar, Plus, User, Crown, Trophy, Shield, ChevronDown, LogOut, Settings } from 'lucide-react';
 import JoinEventModal from '../events/JoinEventModal';
 import EventChat from '../chat/EventChat';
 import EventDashboard from '../events/EventDashboard';
@@ -18,6 +18,15 @@ import LocationCircle from './LocationCircle';
 import { useToast } from '@/components/ui/use-toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { eventsAPI } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import L from 'leaflet';
 
 // Dynamically import Leaflet components to avoid SSR issues
@@ -379,11 +388,41 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
               </div>
 
               {user ? (
-                <button className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors hover:scale-105 active:scale-95">
-                  <User className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-300" />
-                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:inline">{user.name}</span>
-                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 sm:hidden">{user.name.split(' ')[0]}</span>
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors hover:scale-105 active:scale-95">
+                      <User className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-300" />
+                      <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:inline">{user.name}</span>
+                      <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 sm:hidden">{user.name.split(' ')[0]}</span>
+                      <ChevronDown className="w-3 h-3 text-gray-500" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      className="cursor-pointer text-red-600 focus:text-red-600"
+                      onClick={() => useAuthStore.getState().logout()}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 <button
                   onClick={onLogin}
