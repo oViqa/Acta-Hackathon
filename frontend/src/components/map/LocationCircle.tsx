@@ -10,7 +10,7 @@ interface LocationCircleProps {
   color?: string;
 }
 
-export default function LocationCircle({ center, radius, color = '#ff6b9d' }: LocationCircleProps) {
+export default function LocationCircle({ center, radius, color = '#f97316' }: LocationCircleProps) {
   const map = useMap();
 
   useEffect(() => {

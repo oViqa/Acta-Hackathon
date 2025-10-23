@@ -52,7 +52,7 @@ const createLocationIcon = () =>
         height: 0;
         border-left: 12px solid transparent;
         border-right: 12px solid transparent;
-        border-top: 20px solid #ff6b9d;
+        border-top: 20px solid #f97316;
         position: relative;
         filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
       ">
@@ -62,7 +62,7 @@ const createLocationIcon = () =>
           left: -8px;
           width: 16px;
           height: 16px;
-          background: #ff6b9d;
+          background: #f97316;
           border-radius: 50%;
           border: 2px solid white;
         "></div>

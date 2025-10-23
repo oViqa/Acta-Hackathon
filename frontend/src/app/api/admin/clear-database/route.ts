@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     // Simple auth check - you can make this more secure
     const { adminPassword } = await request.json();
     
-    if (adminPassword !== 'puddingadmin123') {
+    if (adminPassword !== process.env.ADMIN_PASSWORD) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

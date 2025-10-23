@@ -166,7 +166,7 @@ export function CreateEventDialog({ open, onOpenChange, onEventCreated }: Create
                 size="sm"
                 onClick={handleUseMyLocation}
                 disabled={gettingLocation}
-                className="text-xs"
+                className="text-xs border-orange-500 text-orange-600 hover:bg-orange-50 hover:border-orange-600"
               >
                 {gettingLocation ? (
                   <>
