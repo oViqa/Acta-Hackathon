@@ -152,16 +152,6 @@
   }
 }
 
-@keyframes ripple {
-  0% {
-    transform: scale(0);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
 
 @keyframes hot-badge {
   0%, 100% { 
@@ -188,10 +178,6 @@
   .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
   .animate-slide-up { animation: slide-up 0.4s ease-out; }
   
-  /* New live map animations */
-  .animate-pulse { animation: pulse 2s infinite; }
-  .animate-ripple { animation: ripple 0.6s ease-out; }
-  .animate-hot-badge { animation: hot-badge 1.5s ease-in-out infinite; }
   
   /* Hover animations */
   .hover-scale-105:hover { transform: scale(1.05); }

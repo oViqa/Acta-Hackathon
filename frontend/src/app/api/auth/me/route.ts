@@ -14,14 +14,8 @@ export async function GET(request: NextRequest) {
     try {
       ({ db } = await connectToDatabase());
     } catch (dbError) {
-      console.warn('MongoDB connection failed, falling back to mock user:', dbError);
-      // Return mock user data when DB is unavailable
-      return NextResponse.json({
-        id: userId,
-        name: 'Mock User',
-        email: 'user@example.com',
-        role: 'user'
-      });
+      console.error('MongoDB connection failed:', dbError);
+      return NextResponse.json({ error: 'Database connection failed. Please check MongoDB Atlas cluster status.' }, { status: 500 });
     }
 
     const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });

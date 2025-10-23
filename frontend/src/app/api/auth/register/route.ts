@@ -11,11 +11,8 @@ export async function POST(request: NextRequest) {
     try {
       ({ db } = await connectToDatabase());
     } catch (dbError) {
-      console.warn('MongoDB connection failed, falling back to mock registration:', dbError);
-      // Fallback to mock registration if DB connection fails
-      const mockUserId = `mock-user-${Date.now()}`;
-      const token = jwt.sign({ userId: mockUserId, role: 'user' }, JWT_SECRET, { expiresIn: '1h' });
-      return NextResponse.json({ message: 'User registered (mock)', user: { id: mockUserId, email, name, role: 'user' }, token });
+      console.error('MongoDB connection failed:', dbError);
+      return NextResponse.json({ error: 'Database connection failed. Please check MongoDB Atlas cluster status.' }, { status: 500 });
     }
     
     const users = db.collection('users');

@@ -11,19 +11,8 @@ export async function POST(request: NextRequest) {
     try {
       ({ db } = await connectToDatabase());
     } catch (dbError) {
-      console.warn('MongoDB connection failed, falling back to mock login:', dbError);
-      // Fallback to mock login if DB connection fails
-      const mockUsers = [
-        { email: 'admin2@puddingmeetup.com', password: 'adminpudding2', name: 'Admin User', id: 'mock-admin-id', role: 'admin' },
-        { email: 'puddingdummy@puddingmeetup.com', password: 'dummytest', name: 'PuddingDummy', id: 'mock-dummy-id', role: 'user' },
-        { email: 'test@example.com', password: 'testpass', name: 'Test User', id: 'mock-test-id', role: 'user' },
-      ];
-      const mockUser = mockUsers.find(u => u.email === email && u.password === password);
-      if (mockUser) {
-        const token = jwt.sign({ userId: mockUser.id, role: mockUser.role }, JWT_SECRET, { expiresIn: '1h' });
-        return NextResponse.json({ message: 'Login successful (mock)', user: { id: mockUser.id, email: mockUser.email, name: mockUser.name, role: mockUser.role }, token });
-      }
-      return NextResponse.json({ error: 'Invalid email or password (mock)' }, { status: 401 });
+      console.error('MongoDB connection failed:', dbError);
+      return NextResponse.json({ error: 'Database connection failed. Please check MongoDB Atlas cluster status.' }, { status: 500 });
     }
     
     const users = db.collection('users');

@@ -16,33 +16,8 @@ export async function GET(request: NextRequest) {
     try {
       ({ db } = await connectToDatabase());
     } catch (dbError) {
-      console.warn('MongoDB connection failed, falling back to mock events for GET:', dbError);
-      // Fallback to mock events if DB connection fails
-      const mockEvents = [
-        {
-          _id: new ObjectId(),
-          title: 'Mock Event 1',
-          description: 'This is a mock event from the fallback.',
-          location: { type: 'Point', coordinates: [13.404954, 52.520008] }, // Berlin
-          city: 'Berlin',
-          startTime: new Date().toISOString(),
-          attendeeLimit: 10,
-          attendeeCount: 3,
-          isHot: true,
-        },
-        {
-          _id: new ObjectId(),
-          title: 'Mock Event 2',
-          description: 'Another mock event.',
-          location: { type: 'Point', coordinates: [11.5820, 48.1351] }, // Munich
-          city: 'Munich',
-          startTime: new Date(Date.now() + 3600000).toISOString(),
-          attendeeLimit: 20,
-          attendeeCount: 5,
-          isHot: false,
-        },
-      ];
-      return NextResponse.json({ events: mockEvents, total: mockEvents.length });
+      console.error('MongoDB connection failed:', dbError);
+      return NextResponse.json({ error: 'Database connection failed. Please check MongoDB Atlas cluster status.' }, { status: 500 });
     }
     
     const eventsCol = db.collection('events');
@@ -121,17 +96,8 @@ export async function POST(request: NextRequest) {
     try {
       ({ db } = await connectToDatabase());
     } catch (dbError) {
-      console.warn('MongoDB connection failed, falling back to mock events for POST:', dbError);
-      // Fallback to mock event creation
-      const mockEvent = { 
-        _id: new ObjectId(), 
-        ...eventData, 
-        organizerId: userId,
-        id: new ObjectId().toHexString(), 
-        createdAt: new Date() 
-      };
-      console.log('Mock event created:', mockEvent);
-      return NextResponse.json({ message: 'Event created (mock)', event: mockEvent }, { status: 201 });
+      console.error('MongoDB connection failed:', dbError);
+      return NextResponse.json({ error: 'Database connection failed. Please check MongoDB Atlas cluster status.' }, { status: 500 });
     }
     
     const eventsCol = db.collection('events');

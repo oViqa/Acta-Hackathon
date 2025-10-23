@@ -68,7 +68,6 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
   const [selectedEventForChat, setSelectedEventForChat] = useState<Event | null>(null);
   const [radiusKm, setRadiusKm] = useState<number>(20);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [rippleKey, setRippleKey] = useState(0);
   const mapRef = useRef<any>(null);
   const [showEventDashboard, setShowEventDashboard] = useState(false);
   const [selectedEventForDashboard, setSelectedEventForDashboard] = useState<Event | null>(null);
@@ -82,7 +81,7 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
     L.divIcon({
       className: 'pudding-marker',
       html:
-        '<div class="pudding-marker-inner" style="width:28px;height:28px;border-radius:9999px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#fff;font-size:16px;border:2px solid white;box-shadow:0 4px 10px rgba(0,0,0,.15);position:relative;">🍮</div>',
+        '<div class="pudding-marker-inner" style="width:28px;height:28px;border-radius:9999px;display:flex;align-items:center;justify-content:center;background:#ffffff;color:#333;font-size:18px;border:2px solid #f59e0b;box-shadow:0 4px 10px rgba(0,0,0,.15);position:relative;">🍮</div>',
       iconSize: [28, 28],
       iconAnchor: [14, 28],
       popupAnchor: [0, -28],
@@ -154,66 +153,12 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
       setEvents(mapped);
     } catch (error) {
       console.error('Failed to fetch events:', error);
-      // fallback to mock data with hot events
-      const now = new Date();
-      const mockEvents: Event[] = [
-        { 
-          id: '1', 
-          title: 'Schoko-Pudding Sonntag', 
-          location: { lat: 52.520008, lng: 13.404954 }, 
-          city: 'Berlin', 
-          startTime: '2025-10-06T15:00:00Z', 
-          attendeeLimit: 15, 
-          attendeeCount: 8,
-          createdAt: new Date(now.getTime() - 5 * 60 * 1000).toISOString(),
-          isHot: false
-        },
-        { 
-          id: '2', 
-          title: 'Vanille Vibes', 
-          location: { lat: 48.1351, lng: 11.5820 }, 
-          city: 'Munich', 
-          startTime: '2025-10-07T14:00:00Z', 
-          attendeeLimit: 12, 
-          attendeeCount: 5,
-          createdAt: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-          isHot: false
-        },
-        { 
-          id: '3', 
-          title: 'Caramel Connect', 
-          location: { lat: 50.1109, lng: 8.6821 }, 
-          city: 'Frankfurt', 
-          startTime: '2025-10-08T16:00:00Z', 
-          attendeeLimit: 20, 
-          attendeeCount: 12,
-          createdAt: new Date(now.getTime() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
-          isHot: false
-        },
-        { 
-          id: '4', 
-          title: 'Chocolate Heaven', 
-          location: { lat: 53.5511, lng: 9.9937 }, 
-          city: 'Hamburg', 
-          startTime: '2025-10-09T18:00:00Z', 
-          attendeeLimit: 25, 
-          attendeeCount: 18,
-          createdAt: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
-          isHot: false
-        },
-        { 
-          id: '5', 
-          title: 'Pudding Paradise', 
-          location: { lat: 51.2277, lng: 6.7735 }, 
-          city: 'Düsseldorf', 
-          startTime: '2025-10-10T16:30:00Z', 
-          attendeeLimit: 18, 
-          attendeeCount: 10,
-          createdAt: new Date(now.getTime() - 15 * 60 * 1000).toISOString(), // 15 minutes ago
-          isHot: false
-        },
-      ];
-      setEvents(mockEvents);
+      toast({
+        title: "Database Error",
+        description: "Unable to load events. Please check MongoDB Atlas cluster status.",
+        variant: "destructive",
+      });
+      setEvents([]);
     } finally {
       setIsLoading(false);
     }
@@ -321,7 +266,6 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
 
   const handleMarkerClick = (event: Event) => {
     setSelectedEvent(event);
-    setRippleKey(prev => prev + 1);
   };
 
   const handleAdminSuccess = () => {
@@ -589,17 +533,6 @@ export default function MapView({ onCreateEvent, onLogin, user }: MapViewProps) 
           ))}
         </MapContainer>
         
-        {/* Ripple Effect Overlay */}
-        {selectedEvent && (
-          <div 
-            key={rippleKey}
-            className="absolute inset-0 pointer-events-none z-10"
-            style={{
-              background: `radial-gradient(circle at ${((selectedEvent.location.lng + 180) / 360) * 100}% ${((selectedEvent.location.lat + 90) / 180) * 100}%, rgba(255, 107, 157, 0.3) 0%, transparent 50%)`,
-              animation: 'ripple 0.6s ease-out'
-            }}
-          />
-        )}
       </div>
 
 
