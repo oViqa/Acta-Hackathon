@@ -3,6 +3,8 @@ import { connectToDatabase } from '@/lib/database';
 import { getUserIdFromRequest } from '@/lib/auth-helpers';
 import { ObjectId } from 'mongodb';
 
+export const dynamic = 'force-dynamic';
+
 // PATCH - Approve a request
 export async function PATCH(
   req: NextRequest,

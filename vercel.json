@@ -4,6 +4,11 @@
   "outputDirectory": ".next",
   "framework": "nextjs",
   "rootDirectory": "frontend",
+  "functions": {
+    "frontend/src/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",

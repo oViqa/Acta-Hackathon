@@ -33,17 +33,39 @@ export default function AdminLogin({ onSuccess, onClose }: AdminLoginProps) {
     setIsLoading(true);
 
     try {
-      // Simulate admin login check
-      if (username === 'admin' && password === 'adminpudding') {
-        toast({
-          title: 'Welcome, Admin!',
-          description: 'Successfully logged in to admin dashboard.'
-        });
-        onSuccess();
+      // Use the normal login API instead of hardcoded credentials
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: username, // username field is actually email
+          password: password
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Check if user has admin role
+        if (data.user.role === 'admin') {
+          toast({
+            title: 'Welcome, Admin!',
+            description: 'Successfully logged in to admin dashboard.'
+          });
+          onSuccess();
+        } else {
+          toast({
+            title: 'Access Denied',
+            description: 'This account does not have admin privileges.',
+            variant: 'destructive'
+          });
+        }
       } else {
         toast({
           title: 'Invalid credentials',
-          description: 'Please check your username and password.',
+          description: data.error || 'Please check your email and password.',
           variant: 'destructive'
         });
       }
@@ -132,9 +154,9 @@ export default function AdminLogin({ onSuccess, onClose }: AdminLoginProps) {
               <div className="flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div className="text-sm text-blue-800">
-                  <p className="font-medium">Admin Credentials:</p>
-                  <p>Username: <code className="bg-blue-100 px-1 rounded">admin</code></p>
-                  <p>Password: <code className="bg-blue-100 px-1 rounded">adminpudding</code></p>
+                  <p className="font-medium">Admin Login:</p>
+                  <p>Use your admin email and password to access the dashboard.</p>
+                  <p className="text-xs mt-1 text-blue-600">Contact system administrator if you need access.</p>
                 </div>
               </div>
             </div>

@@ -3,6 +3,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { connectToDatabase } from '@/lib/database';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { name, email, password } = await request.json();
@@ -26,7 +28,10 @@ export async function POST(request: NextRequest) {
     const passwordHash = await bcrypt.hash(password, 10);
     const result = await users.insertOne({ name, email, passwordHash, createdAt: new Date() });
 
-    const secret = process.env.JWT_SECRET || 'your-secret-key';
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('JWT_SECRET environment variable is required');
+    }
     const token = jwt.sign({ userId: result.insertedId.toString() }, secret, { expiresIn: '7d' });
 
     return NextResponse.json({

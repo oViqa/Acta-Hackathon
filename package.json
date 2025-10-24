@@ -22,7 +22,7 @@
     "vercel": "^41.0.2"
   },
   "engines": {
-    "node": ">=20.0.0",
+    "node": "20.x",
     "npm": ">=10.0.0"
   },
   "repository": {

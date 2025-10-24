@@ -3,6 +3,8 @@ import { getUserIdFromRequest } from '@/lib/auth-helpers';
 import { connectToDatabase } from '@/lib/database';
 import { ObjectId } from 'mongodb';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const userId = getUserIdFromRequest(request);

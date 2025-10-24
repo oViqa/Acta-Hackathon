@@ -3,6 +3,8 @@ import { connectToDatabase } from '@/lib/database';
 import { getUserIdFromRequest } from '@/lib/auth-helpers';
 import { ObjectId } from 'mongodb';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

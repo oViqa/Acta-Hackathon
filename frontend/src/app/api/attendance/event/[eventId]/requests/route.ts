@@ -3,6 +3,8 @@ import { connectToDatabase } from '@/lib/database';
 import { getUserIdFromRequest } from '@/lib/auth-helpers';
 import { ObjectId } from 'mongodb';
 
+export const dynamic = 'force-dynamic';
+
 // GET all requests for an event (HOST ONLY)
 export async function GET(
   req: NextRequest,
