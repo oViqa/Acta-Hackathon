@@ -157,3 +157,6 @@ temp/
 # MongoDB
 data/
 .vercel
+
+# Deployment packages
+deployment-package.tar.gz
