@@ -3,7 +3,7 @@
   "installCommand": "npm install", 
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "root": "frontend",
+  "rootDirectory": "frontend",
   "functions": {
     "frontend/src/app/api/**/*.ts": {
       "maxDuration": 30
