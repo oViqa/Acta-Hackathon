@@ -3,11 +3,6 @@
   "installCommand": "npm install",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "functions": {
-    "frontend/src/app/api/**/*.ts": {
-      "maxDuration": 30
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
