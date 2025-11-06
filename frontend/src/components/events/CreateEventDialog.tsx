@@ -81,8 +81,18 @@ export function CreateEventDialog({ open, onOpenChange, onEventCreated }: Create
       const startDateTime = new Date(`${startDate}T${startTime}`);
       const endDateTime = new Date(startDateTime.getTime() + parseInt(duration) * 60 * 60 * 1000);
 
-      // Extract city from location address or use coordinates
+      // Extract city and state from location address or use coordinates
       const city = location.address || `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`;
+      
+      // Try to extract state from address, or use a default
+      let state = 'Unknown';
+      if (location.address) {
+        // Try to parse state from address (typically after the last comma)
+        const addressParts = location.address.split(',').map(part => part.trim());
+        if (addressParts.length >= 2) {
+          state = addressParts[addressParts.length - 2] || 'Unknown';
+        }
+      }
 
       const eventData = {
         title,
@@ -92,6 +102,8 @@ export function CreateEventDialog({ open, onOpenChange, onEventCreated }: Create
           lng: location.lng
         },
         city,
+        state,
+        address: location.address,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
         attendeeLimit: parseInt(attendeeLimit)

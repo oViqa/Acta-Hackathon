@@ -56,10 +56,25 @@ export default function CreateEventModal({ isOpen, onClose, onSubmit }: CreateEv
       return;
     }
 
+    // Extract city and state from location address
+    const city = formData.location || selectedLocation.address || 'Unknown';
+    
+    // Try to extract state from address, or use a default
+    let state = 'Unknown';
+    if (selectedLocation.address) {
+      // Try to parse state from address (typically after the last comma)
+      const addressParts = selectedLocation.address.split(',').map(part => part.trim());
+      if (addressParts.length >= 2) {
+        state = addressParts[addressParts.length - 2] || 'Unknown';
+      }
+    }
+
     const eventData = {
       ...formData,
       location: selectedLocation,
-      city: formData.location || selectedLocation.address || 'Unknown',
+      city,
+      state,
+      address: selectedLocation.address,
       startTime: new Date(`${formData.date}T${formData.time}`).toISOString(),
       endTime: new Date(`${formData.date}T${formData.time}`).toISOString(), // Add 2 hours
     };
