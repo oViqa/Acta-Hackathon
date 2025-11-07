@@ -7,6 +7,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const userId = getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const lat = searchParams.get('lat');
     const lng = searchParams.get('lng');
@@ -61,8 +67,9 @@ export async function GET(request: NextRequest) {
           if (organizerUser) {
             organizer = {
               id: organizerUser._id.toString(),
-              name: organizerUser.name,
-              email: organizerUser.email
+              name: organizerUser.name || organizerUser.displayName || organizerUser.username || 'Unknown',
+              username: organizerUser.username || organizerUser.displayName || 'Unknown',
+              displayName: organizerUser.displayName || organizerUser.username || 'Unknown'
             };
           }
         }
@@ -128,8 +135,9 @@ export async function POST(request: NextRequest) {
         organizerId: userId,
         organizer: {
           id: user._id.toString(),
-          name: user.name,
-          email: user.email
+          name: user.name || user.displayName || user.username || 'Unknown',
+          username: user.username || user.displayName || 'Unknown',
+          displayName: user.displayName || user.username || 'Unknown'
         },
         createdAt: new Date().toISOString(),
         status: 'UPCOMING'
