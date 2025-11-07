@@ -3,7 +3,6 @@ import { authAPI } from '@/lib/api';
 
 interface User {
   id: string;
-  email: string;
   name: string;
   avatarUrl?: string;
 }
@@ -13,8 +12,8 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  login: (name: string, password: string) => Promise<void>;
+  register: (name: string, password: string) => Promise<void>;
   logout: () => void;
   checkAuth: () => Promise<void>;
 }
@@ -25,10 +24,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   isLoading: false, // Start with false to avoid loading screen
 
-  login: async (email, password) => {
+  login: async (name, password) => {
     set({ isLoading: true });
     try {
-      const response = await authAPI.login({ email, password });
+      const response = await authAPI.login({ name, password });
       const { user, token } = response.data;
       localStorage.setItem('token', token);
       set({ user, token, isAuthenticated: true, isLoading: false });
@@ -38,10 +37,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  register: async (email, password, name) => {
+  register: async (name, password) => {
     set({ isLoading: true });
     try {
-      const response = await authAPI.register({ name, email, password });
+      const response = await authAPI.register({ name, password });
       const { user, token } = response.data;
       localStorage.setItem('token', token);
       set({ user, token, isAuthenticated: true, isLoading: false });
@@ -69,7 +68,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         const userId = token.replace('mock-', '').replace('-token', '');
         const user = { 
           id: userId, 
-          email: 'user@example.com', 
           name: 'Mock User',
           role: userId.includes('admin') ? 'admin' : 'user'
         };

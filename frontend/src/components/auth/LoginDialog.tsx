@@ -16,9 +16,8 @@ interface LoginDialogProps {
 
 export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { login, register } = useAuthStore();
   const { toast } = useToast();
@@ -29,22 +28,21 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
 
     try {
       if (isLogin) {
-        await login(email, password);
+        await login(name, password);
         toast({
           title: 'Welcome back!',
           description: 'You have successfully logged in.',
         });
       } else {
-        await register(email, password, name);
+        await register(name, password);
         toast({
           title: 'Account created!',
           description: 'Welcome to Pudding Gabel!',
         });
       }
       onOpenChange(false);
-      setEmail('');
-      setPassword('');
       setName('');
+      setPassword('');
     } catch (error: any) {
       const errorMessage = handleApiError(error);
       toast({
@@ -72,27 +70,14 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          {!isLogin && (
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-          )}
-
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="name">Name</Label>
             <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="name"
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               required
             />
           </div>

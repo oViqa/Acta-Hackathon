@@ -23,12 +23,12 @@ apiClient.interceptors.request.use((config) => {
 
 // Auth API
 export const authAPI = {
-  login: async (data: { email: string; password: string }) => {
+  login: async (data: { name: string; password: string }) => {
     const response = await apiClient.post('/auth/login', data);
     return response;
   },
 
-  register: async (data: { name: string; email: string; password: string }) => {
+  register: async (data: { name: string; password: string }) => {
     const response = await apiClient.post('/auth/register', data);
     return response;
   },

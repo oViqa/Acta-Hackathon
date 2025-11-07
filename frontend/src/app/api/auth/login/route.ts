@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const { name, password } = await request.json();
     
     let db;
     try {
@@ -18,15 +18,15 @@ export async function POST(request: NextRequest) {
     }
     
     const users = db.collection('users');
-    const user = await users.findOne({ email });
+    const user = await users.findOne({ name });
     
     if (!user) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid name or password' }, { status: 401 });
     }
 
     const valid = await bcrypt.compare(password, user.passwordHash ?? user.password);
     if (!valid) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid name or password' }, { status: 401 });
     }
 
     const secret = process.env.JWT_SECRET || 'fallback-secret-for-development';
@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
       message: 'Login successful',
       user: { 
         id: user._id.toString(), 
-        email: user.email, 
         name: user.name,
         role: user.role || 'user'
       },
